@@ -90,3 +90,9 @@ def full_poster_path(df=None):
     df['full_poster_path']= "https://image.tmdb.org/t/p/original/"+df['poster_path']
     df1=df.drop(columns=["poster_path"])
     return(df1)
+
+def count_words(df=None):
+    df1=df.copy()
+    df1["overview_count"]=df1["overview"].str.len()
+    df1["title_count"]=df1["title"].str.len()
+    return(df1)
