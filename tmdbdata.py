@@ -69,14 +69,32 @@ def get_movies_info(ids=[], headers=None):
         dataframes.append(pd.json_normalize(req)) #pas très efficace voir si on peut améliorer
     
     df = pd.concat(dataframes, ignore_index=True)
+    df=df[df["status_message"].isna()]
+
     return(df)
 
-def drop_useless_info(df=None):
 
+
+def drop_useless_info(df=None):
     assert df is not None, "No data frame was given"
 
-    df1= df.drop(columns=["adult","backdrop_path", "belongs_to_collection", "homepage", "imdb_id", "origin_country", "original_language", "original_title", "production_companies", "production_countries", "spoken_languages", "status", "tagline", "video", "belongs_to_collection.id", "belongs_to_collection.name", "belongs_to_collection.poster_path", "belongs_to_collection.backdrop_path" ])
-    return(df1)
+    # Liste des colonnes à supprimer
+    columns_to_drop = [
+        "adult", "backdrop_path", "belongs_to_collection", "homepage", "imdb_id", 
+        "origin_country", "original_language", "original_title", "production_companies", 
+        "production_countries", "spoken_languages", "status", "tagline", "video", 
+        "belongs_to_collection.id", "belongs_to_collection.name", 
+        "belongs_to_collection.poster_path", "belongs_to_collection.backdrop_path","success","status_code", "status_message"
+
+    ]
+
+    # Vérifier quelles colonnes sont présentes avant de les supprimer
+    columns_in_df = [col for col in columns_to_drop if col in df.columns]
+
+    # Supprimer seulement les colonnes présentes
+    df1 = df.drop(columns=columns_in_df)
+    
+    return df1
 
 def keep_main_genre(df=None):
 
