@@ -98,6 +98,8 @@ def drop_useless_info(df=None):
 
 def keep_main_genre(df=None):
 
+    df = df.dropna(subset=['genres'])
+
     df['main_genre_id'] = df['genres'].map(lambda x: x[0]['id'])
     df['main_genre_name'] = df['genres'].map(lambda x: x[0]['name'])
     df1=df.drop(columns=["genres"])
