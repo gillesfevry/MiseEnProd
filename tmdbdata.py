@@ -11,6 +11,8 @@ headers = {"accept": "application/json",
             "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzNjcwNTY1MTA0YzUzY2Q0MjE3N2M3ZWQyMmVmZDk1ZCIsIm5iZiI6MTczMjI5MzAwNy4yMTk0MDM1LCJzdWIiOiI2NzQwYWY5OWRkNTNmYTAwNjAzMzM3YzUiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.8DPhrUjEakZO4CxeovXkNmSOe01nH3r5kEZlntq547M"
             }
 
+genre_dictionnary =requests.get('https://api.themoviedb.org/3/genre/movie/list?language=en', headers=headers).json()['genres']
+
 def get_movie_ids_list(nb_pages=1, headers=None):
     """
         Creates a list of the ids of the most rated movies using TMDB API discover function. 
@@ -71,6 +73,42 @@ def get_movies_info(ids=[], headers=None):
     
     df = pd.concat(dataframes, ignore_index=True)
     return(df)
+
+def get_balanced_movie_list(nb_pages=1, headers=None):
+    """
+        Creates a list of the ids of movies with near 0 revenue, where each genre is equally represented
+
+        Parameters:
+        nb_pages (int >=1): The number of pages in the Discover option we want to get data from. A page lists 20 movies.
+        for each genre, nb_pages will be rethrieved 
+        headers (dictionnary): The headers needed to use the TMDB API. 
+
+        Returns:
+        list: list of movie ids
+    """
+    assert headers is not None, "Headers is not None"
+    assert isinstance(nb_pages, int) and nb_pages >= 1, "nb_pages is not an int >=1"
+
+    #initializing of the fixed parts of the url and of the ids list
+    url_start="https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1"
+    url_mid="&sort_by=revenue.asc&with_genres="
+    url_end="&without_genres="
+    
+    genre_list= [genre['id'] for genre in genre_dictionnary]
+    ids=[]
+
+    print("getting movie ids, 19 items (=genres) to get")
+
+    #rethrieving movie ids
+    for j, id_unique in tqdm(enumerate(genre_list)):
+        rest = genre_list[:j] + genre_list[j+1:]
+        for i in range(nb_pages):
+            url=url_start+str(i)+url_mid+str(id_unique)+url_end+"%2C".join(map(str, rest))
+            req=requests.get(url, headers=headers).json()
+            time.sleep(0.5) # to prevent overloading
+            ids.extend(movie["id"] for movie in req["results"])
+    
+    return(ids)
 
 def clean_data(df=None):
     if  "status_message" in df.columns:
