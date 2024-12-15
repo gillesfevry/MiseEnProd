@@ -4,6 +4,7 @@ import requests
 import pandas as pd
 from tqdm import tqdm
 import time
+import ast
 
 #headers linked to Gilles' account needed to use the API
 headers = {"accept": "application/json",
@@ -71,14 +72,46 @@ def get_movies_info(ids=[], headers=None):
     df = pd.concat(dataframes, ignore_index=True)
     return(df)
 
-def drop_useless_info(df=None):
-
-    assert df is not None, "No data frame was given"
-
-    df1= df.drop(columns=["adult","backdrop_path", "belongs_to_collection", "homepage", "imdb_id", "origin_country", "original_language", "original_title", "production_companies", "production_countries", "spoken_languages", "status", "tagline", "video", "belongs_to_collection.id", "belongs_to_collection.name", "belongs_to_collection.poster_path", "belongs_to_collection.backdrop_path" ])
+def clean_data(df=None):
+    if  "status_message" in df.columns:
+        df1=df[df["status_message"].isna()]
+    else:
+        df1=df.copy()
+    df1=df1.dropna(subset=['overview'])
+    df1=drop_useless_info(df1)
+    df1=keep_main_genre(df1)
+    df1=full_poster_path(df1)
+    df1=count_words(df1)
+    df1=transform_date(df1)
     return(df1)
 
+def drop_useless_info(df=None):
+    assert df is not None, "No data frame was given"
+
+    # Liste des colonnes à supprimer
+    columns_to_drop = [
+        "adult", "backdrop_path", "belongs_to_collection", "homepage", "imdb_id", 
+        "origin_country", "original_language", "original_title", "production_companies", 
+        "production_countries", "spoken_languages", "status", "tagline", "video", 
+        "belongs_to_collection.id", "belongs_to_collection.name", 
+        "belongs_to_collection.poster_path", "belongs_to_collection.backdrop_path","success","status_code", "status_message"
+
+    ]
+
+    # Vérifier quelles colonnes sont présentes avant de les supprimer
+    columns_in_df = [col for col in columns_to_drop if col in df.columns]
+
+    # Supprimer seulement les colonnes présentes
+    df1 = df.drop(columns=columns_in_df)
+    
+    return df1
+
 def keep_main_genre(df=None):
+
+    if isinstance(df['genres'].iloc[0], str):
+        df['genres'] = df['genres'].apply(ast.literal_eval)
+    df = df.dropna(subset=['genres'])
+    df = df[df['genres'].apply(lambda x: len(x) > 0)]
 
     df['main_genre_id'] = df['genres'].map(lambda x: x[0]['id'])
     df['main_genre_name'] = df['genres'].map(lambda x: x[0]['name'])
@@ -96,3 +129,8 @@ def count_words(df=None):
     df1["overview_count"]=df1["overview"].str.len()
     df1["title_count"]=df1["title"].str.len()
     return(df1)
+
+def transform_date(df=None):
+    df['release_date'] = pd.to_datetime(df['release_date'])
+    df['timestamp'] = df['release_date'].astype('int64') // 10**9
+    return(df)
