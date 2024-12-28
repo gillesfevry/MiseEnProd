@@ -28,8 +28,8 @@ def get_movie_ids_list(nb_pages=1, headers=None):
     assert isinstance(nb_pages, int) and nb_pages >= 1, "nb_pages is not an int >=1"
 
     #initializing of the fixed parts of the url and of the ids list
-    url_start="https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=fr-FR&page="
-    url_end="&sort_by=vote_count.desc&with_original_language=fr"
+    url_start= "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page="
+    url_end="&sort_by=vote_count.desc"
     ids=[]
 
     print("getting movie ids")
@@ -72,8 +72,6 @@ def get_movies_info(ids=[], headers=None):
         dataframes.append(pd.json_normalize(req)) #pas très efficace voir si on peut améliorer
     
     df = pd.concat(dataframes, ignore_index=True)
-    df=df[df["status_message"].isna()]
-
     return(df)
 
 def get_balanced_movie_list(nb_pages=1, headers=None):
