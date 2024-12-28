@@ -72,6 +72,8 @@ def get_movies_info(ids=[], headers=None):
         dataframes.append(pd.json_normalize(req)) #pas très efficace voir si on peut améliorer
     
     df = pd.concat(dataframes, ignore_index=True)
+    df=df[df["status_message"].isna()]
+
     return(df)
 
 def get_balanced_movie_list(nb_pages=1, headers=None):
