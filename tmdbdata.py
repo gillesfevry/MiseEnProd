@@ -77,6 +77,36 @@ def get_movies_info(ids=[], headers=None):
     df = pd.concat(dataframes, ignore_index=True)
     return(df)
 
+def get_movie_ids_list_map(nb_pages=1, headers=None):
+    """
+        Creates a list of the ids of the most rated movies using TMDB API discover function. 
+
+        Parameters:
+        nb_pages (int >=1): The number of pages in the Discover option we want to get data from. A page lists 20 movies.
+        headers (dictionnary): The headers needed to use the TMDB API. 
+
+        Returns:
+        list: list of movie ids
+    """
+    assert headers is not None, "Headers is not None"
+    assert isinstance(nb_pages, int) and nb_pages >= 1, "nb_pages is not an int >=1"
+
+    #initializing of the fixed parts of the url and of the ids list
+    url_start='https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&page='
+    url_end="&primary_release_date.gte=2016-01-01&sort_by=primary_release_date.asc&with_original_language=fr"
+    ids=[]
+
+    print("getting movie ids")
+
+    #rethrieving movie ids
+    for i in tqdm(range(nb_pages)):
+        url=url_start+str(i+1)+url_end
+        req=requests.get(url, headers=headers).json()
+        time.sleep(0.5) # to prevent overloading
+        ids.extend(movie["id"] for movie in req["results"])
+    
+    return(ids)
+
 def get_balanced_movie_list(nb_pages=1, headers=None):
     """
         Creates a list of the ids of movies with near 0 revenue, where each genre is equally represented
@@ -114,7 +144,7 @@ def get_balanced_movie_list(nb_pages=1, headers=None):
     
     return(ids)
 
-def clean_data(df=None):
+def clean_data(df=None, drop_original_title=True):
     """
         Calls a series of functions to clean the data-frame provided with get_movies_info
 
@@ -132,7 +162,7 @@ def clean_data(df=None):
     else:
         df1=df.copy()
     df1=df1.dropna(subset=['overview']) #get rid of ligns where there is no overview
-    df1=drop_useless_info(df1)
+    df1=drop_useless_info(df1, drop_original_title)
     df1=keep_main_genre(df1)
     df1=full_poster_path(df1)
     df1=count_words(df1)
