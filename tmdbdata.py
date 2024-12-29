@@ -90,8 +90,8 @@ def get_balanced_movie_list(nb_pages=1, headers=None):
     assert isinstance(nb_pages, int) and nb_pages >= 1, "nb_pages is not an int >=1"
 
     #initializing of the fixed parts of the url and of the ids list
-    url_start="https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1"
-    url_mid="&sort_by=revenue.asc&with_genres="
+    url_start="https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page="
+    url_mid="&sort_by=revenue.asc&vote_count.gte=2&with_genres="
     url_end="&without_genres="
     
     genre_list= [genre['id'] for genre in genre_dictionnary]
@@ -103,7 +103,7 @@ def get_balanced_movie_list(nb_pages=1, headers=None):
     for j, id_unique in tqdm(enumerate(genre_list)):
         rest = genre_list[:j] + genre_list[j+1:]
         for i in range(nb_pages):
-            url=url_start+str(i)+url_mid+str(id_unique)+url_end+"%2C".join(map(str, rest))
+            url=url_start+str(i+1)+url_mid+str(id_unique)+url_end+"%2C".join(map(str, rest))
             req=requests.get(url, headers=headers).json()
             time.sleep(0.5) # to prevent overloading
             ids.extend(movie["id"] for movie in req["results"])
