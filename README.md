@@ -20,3 +20,92 @@ Le fichier "requirements" recense les packages Python externes à installer afin
 Des fichiers CSV sont également directement stockés dans ce repo. La manière dont ils sont obtenus est explicité dans le Notebook, mais ils permettent essentiellement de ne pas constamment relancer les requêtes de l'API qui peuvent s'avérer être un peu longues. Enfin nous avons directement importé le fichier des lieux de tournage depuis data.gouv.fr et l'avons glissé sur le repo Github. 
 
 Enfin, il est important de noter que la clef API utilisée pour les requêtes est directement inscrite dans le fichier tmdbdata. Il est donc important que ce repo restent en l'Etat privé. 
+
+Nouveau README : 
+
+
+# MiseEnProd — Analyse de données cinématographiques
+
+## Description du projet
+
+Ce projet explore les données cinématographiques issues de **TMDB** et de **data.gouv** (lieux de tournage à Paris). Son objectif ets de savoir ce qu'on peut diree d'un film sans l'avoir vu.
+
+### Objectifs
+- **Récupération et nettoyage** des données via l'API TMDB
+- **Statistiques descriptives** sur les films 
+- **Prédiction de la note** d'un film via modele
+- **Prédiction du genre** d'un film via  modele
+
+## Structure du projet
+
+```
+MiseEnProd-main/
+├── License
+├── data/
+│   ├── raw/              # The original, immutable data dump. (on S3)
+│   └── processed/        # The final, canonical data sets for modeling. (on S3)
+│
+├── models/               # Trained and serialized models, model predictions, or model summaries
+│
+├── notebooks/            # Jupyter notebooks for exploration.
+│
+├── reports/              # Generated analysis as HTML, PDF, LaTeX, etc.
+│   └── figures/          # Graphics.
+│
+├── src/                  # Source code for use in this project.
+│   ├── config.py         # Charge of secret if needed
+│
+│   ├── data/                     # Scripts to download or generate data.
+│   │   ├── make_dataset.py       # for cleaning the data
+│   │   └── download_from_s3.py   # to download the data
+│
+│   ├── features/                 # Scripts to turn raw data into features for modeling.
+│   │   └── build_features.py     # Construction des features
+│
+│   ├── models/                   # Scripts to train models and then use trained models to make predictions.
+│   │   ├── predict_genre.py      # Genre's prediction 
+│   │   └── predict_rating.py     # Note prediction 
+│
+│   └── visualization/            # Scripts to create exploratory and results oriented visualizations.
+│       └── visualize.py          
+│
+├── .gitignore
+├── pyproject.toml                # Configuration Ruff (linter/formatter)
+├── requirements.txt              # Dépendances Python
+├── secrets.yaml.example          # Template pour les secrets
+└── README.md
+```
+
+
+## Installation
+
+### Prérequis
+- Python 3.12+
+- Git
+
+### Étapes
+
+1. **Cloner le dépôt**
+
+
+2. **Créer un environnement virtuel**
+
+
+3. **Installer les dépendances**
+
+
+4. **Configurer les secrets**
+
+
+5. **Télécharger les données**
+
+## Utilisation
+
+
+## Licence
+
+Ce projet est distribué sous licence MIT. Voir le fichier [LICENSE](LICENSE).
+
+## Auteurs
+
+Projet réalisé dans le cadre du cours "MISE EN PRODUCTION" en A à l'ENSAE.
