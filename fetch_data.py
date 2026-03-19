@@ -15,7 +15,7 @@ headers = {"accept": "application/json",
 #The genre dictionnary provided by the API.
 genre_dictionnary =requests.get('https://api.themoviedb.org/3/genre/movie/list?language=en', headers=headers).json()['genres']
 
-def get_movie_ids_list(nb_pages=1, headers=None, starting_date=None):
+def get_movie_ids_list(headers=None, nb_pages=1, starting_date=None, ending_date=None, minimal_vote_count=100, ascending = False):
     """
     Creates a list of movie IDs using TMDB discover API.
     """
@@ -23,25 +23,30 @@ def get_movie_ids_list(nb_pages=1, headers=None, starting_date=None):
     assert headers is not None, "Headers must not be None"
     assert isinstance(nb_pages, int) and nb_pages >= 1, "nb_pages must be >= 1"
 
-    if starting_date is None:
-        starting_date = datetime.now().strftime("%Y-%m-%d")
-
     url = "https://api.themoviedb.org/3/discover/movie"
+
+    params = {
+            "include_adult": "false",
+            "include_video": "false",
+            "language": "en-US",
+            "vote_count.gte": minimal_vote_count,
+            }
+    
+    if starting_date is not None:
+        params["primary_release_date.gte"] = starting_date
+    if ending_date is not None:
+        params["primary_release_date.lte"] = ending_date
+    if ascending:
+        params["sort_by"] = "primary_release_date.asc"
+    else:
+        params["sort_by"] = "primary_release_date.desc"
 
     ids = []
 
     print("getting movie ids")
 
     for page in tqdm(range(1, nb_pages + 1)):
-        params = {
-            "include_adult": "false",
-            "include_video": "false",
-            "language": "en-US",
-            "page": page,
-            "primary_release_date.lte": starting_date,
-            "sort_by": "primary_release_date.desc",
-            "vote_count.gte": 100,
-        }
+        params["page"] = page
 
         try:
             response = requests.get(url, headers=headers, params=params, timeout=10)
@@ -105,17 +110,18 @@ def clean_data(df=None, drop_original_title=True):
 
     assert df is not None, "No data frame was given"
 
-    if  "status_message" in df.columns: #get rid of ligns where there was a status_error (=no data could be rethrieved)
-        df1=df[df["status_message"].isna()]
+    if  "status_message" in df.columns: # get rid of ligns where there was a status_error (=no data could be rethrieved)
+        df=df[df["status_message"].isna()]
     else:
-        df1=df.copy()
-    df1=df1.dropna(subset=['overview']) #get rid of ligns where there is no overview
-    df1=drop_useless_info(df1, drop_original_title)
-    df1=keep_main_genre(df1)
-    df1=full_poster_path(df1)
-    df1=count_words(df1)
-    df1=transform_date(df1)
-    return(df1)
+        df=df.copy()
+    df=df.dropna(subset=['overview']) #get rid of ligns where there is no overview
+    df=drop_useless_info(df, drop_original_title)
+    df=keep_main_genre(df)
+    df= keep_first_origin_country(df)
+    df=full_poster_path(df)
+    df=count_words(df)
+    df=transform_date(df)
+    return(df)
 
 def drop_useless_info(df=None, drop_original_title=True):
     """
@@ -168,8 +174,13 @@ def keep_main_genre(df=None):
 
     df['main_genre_id'] = df['genres'].map(lambda x: x[0]['id'])
     df['main_genre_name'] = df['genres'].map(lambda x: x[0]['name'])
-    df1=df.drop(columns=["genres"])
+    df1 =df.drop(columns=["genres"])
     return(df1)
+
+def keep_first_origin_country(df=None):
+    df = df[df['origin_country'].apply(lambda x: isinstance(x, list) and len(x) > 0)].copy()
+    df['origin_country'] = df['origin_country'].apply(lambda x: x[0])
+    return df
 
 def full_poster_path(df=None):
     """
