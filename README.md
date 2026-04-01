@@ -95,7 +95,13 @@ MiseEnProd-main/
 
 
 4. **Configurer les secrets**
+Dans un secrets.yaml mettre cette structure : 
 
+```
+tmdb:
+  bearer_token: "Notre_TOKEN"
+
+```
 
 5. **Télécharger les données**
 (Voir s'il vaut mieux pas importer directement les données quand on en a besoin, plutot que de les télécharger, mais le faire à la fin).
