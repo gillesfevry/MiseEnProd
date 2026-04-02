@@ -45,15 +45,12 @@ if __name__ == "__main__":
     
     try:
         mes_secrets = load_secrets()
-        print("Chargement réussi ! Contenu brut :")
         print(mes_secrets)
         
         headers = get_tmdb_headers()
-        print(" Headers générés avec succès :")
         print(headers)
         
     except FileNotFoundError as e:
         print(f" erreur : {e}")
-        print("Vérifiez l'arborescence et le 'parents[1]' !")
     except KeyError as e:
         print(f" erreur : Clé manquante dans le YAML. Il manque : {e}")
