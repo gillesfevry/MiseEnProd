@@ -53,8 +53,6 @@ MiseEnProd-main/
 │   └── figures/          # Graphics.
 │
 ├── src/                  # Source code for use in this project.
-│   ├── config.py         # Charge of secret if needed
-│
 │   ├── data/                     # Scripts to download or generate data.
 │   │   ├── make_dataset.py       # for cleaning the data
 │   │   └── download_from_s3.py   # to download the data
@@ -63,8 +61,9 @@ MiseEnProd-main/
 │   │   └── build_features.py     # Construction des features
 │
 │   ├── models/                   # Scripts to train models and then use trained models to make predictions.
-│   │   ├── predict_genre.py      # Genre's prediction 
-│   │   └── predict_rating.py     # Note prediction 
+│   │   ├── train.py      # prediction
+│   │   ├── config.py             # Charge of secret if needed
+│   │   └── model_pipelines.py     # Build pipeline
 │
 │   └── visualization/            # Scripts to create exploratory and results oriented visualizations.
 │       └── visualize.py          
