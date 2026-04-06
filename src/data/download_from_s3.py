@@ -12,9 +12,9 @@ from pathlib import Path
 from tqdm import tqdm
 import s3fs
 
-DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
+DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "raw" #Il faudra retirer ça pour ne pas l'avoir en brut dans nos dossiers
 
-BUCKET = "s3://arnaud2701/MEP/Projet" 
+BUCKET = "s3://arnaud2701/MEP/Projet"  #Il faudra retirer ça pour ne pas l'avoir en brut dans nos dossiers
 
 FILES = [
     "usbestmovies.csv",
@@ -22,7 +22,7 @@ FILES = [
     "randommovies.csv",
     "data_tmdb_map.csv",
     "lieux-de-tournage-a-paris.csv",
-]
+] #Il faudra retirer ça pour ne pas l'avoir en brut dans nos dossiers
 
 
 def download_data(bucket: str = BUCKET, dest: Path = DATA_DIR) -> None:

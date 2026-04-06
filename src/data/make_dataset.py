@@ -5,7 +5,7 @@ Ce module contient les fonctions pour :
 - Récupérer les détails de chaque film via l'endpoint Movie Details
 - Nettoyer et transformer les données brutes en DataFrame exploitable
 
-Il a pour fonction de remplacer tmdbdata.py
+Il a pour fonction de remplacer tmdbdata_extraction.py
 """
 
 import ast
@@ -102,9 +102,10 @@ def clean_dataset(df: pd.DataFrame, drop_original_title: bool = True) -> pd.Data
     2. Suppression des lignes sans synopsis
     3. Suppression des colonnes inutiles
     4. Extraction du genre principal
-    5. Construction de l'URL complète de l'affiche
-    6. Ajout du nombre de caractères du synopsis et du titre
-    7. Conversion de la date en timestamp Unix
+    5. Conservation du premier pays d'origine
+    6. Construction de l'URL complète de l'affiche
+    7. Ajout du nombre de caractères du synopsis et du titre
+    8. Conversion de la date en timestamp Unix
 
     Arguments:
         df: DataFrame brut issu de ``get_movies_details``.
@@ -123,6 +124,7 @@ def clean_dataset(df: pd.DataFrame, drop_original_title: bool = True) -> pd.Data
     result = result.dropna(subset=["overview"])
     result = _drop_useless_columns(result, drop_original_title)
     result = _extract_main_genre(result)
+    result = _keep_first_origin_country(result)
     result = _build_poster_url(result)
     result = _add_text_length_features(result)
     result = _add_timestamp(result)
@@ -222,7 +224,6 @@ _COLUMNS_TO_DROP = [
     "belongs_to_collection",
     "homepage",
     "imdb_id",
-    "origin_country",
     "original_language",
     "production_companies",
     "success",
@@ -275,6 +276,18 @@ def _extract_main_genre(df: pd.DataFrame) -> pd.DataFrame:
     result["main_genre_id"] = result["genres"].map(lambda x: x[0]["id"])
     result["main_genre_name"] = result["genres"].map(lambda x: x[0]["name"])
     return result.drop(columns=["genres"])
+
+
+def _keep_first_origin_country(df: pd.DataFrame) -> pd.DataFrame:
+    """Conserve uniquement le premier pays d'origine pour chaque film.
+    
+    Supprime les lignes où la liste des pays d'origine est vide.
+    """
+    result = df[
+        df["origin_country"].apply(lambda x: isinstance(x, list) and len(x) > 0)
+    ].copy()
+    result["origin_country"] = result["origin_country"].apply(lambda x: x[0])
+    return result
 
 
 def _build_poster_url(df: pd.DataFrame) -> pd.DataFrame:
