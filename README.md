@@ -95,9 +95,22 @@ MiseEnProd-main/
 
 
 4. **Configurer les secrets**
+Dans un secrets.yaml mettre cette structure : 
 
+```
+tmdb:
+  bearer_token: "Notre_TOKEN"
+
+```
 
 5. **Télécharger les données**
+(Voir s'il vaut mieux pas importer directement les données quand on en a besoin, plutot que de les télécharger, mais le faire à la fin).
+Utiliser le script `src\data\download_from_s3.py` en lançant : `python -m src.data.download_from_s3`.
+Attention, il faut revoir comment implémenter : 
+
+DATA_DIR, BUCKET, FILES. (Pour le moment en brut dans le script, j'ai testé en mettant bien els csv sur s3 et ça marche mais il faudra plutot les mettre dans un fichier de config et expliquer ici quoi mettre dans la config pour lancer)
+
+
 
 ## Utilisation
 
