@@ -10,6 +10,7 @@ Il a pour fonction de remplacer tmdbdata_extraction.py
 
 import ast
 import time
+from typing import Optional
 
 import pandas as pd
 import requests
@@ -18,13 +19,31 @@ from tqdm import tqdm
 from src.models.config import get_tmdb_headers
 
 
-TMDB_DISCOVER_URL = (
-    "https://api.themoviedb.org/3/discover/movie"
-    "?include_adult=false&include_video=false&language=en-US"
-)
-TMDB_MOVIE_URL = "https://api.themoviedb.org/3/movie"
-TMDB_GENRE_URL = "https://api.themoviedb.org/3/genre/movie/list?language=en"
-TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original/"
+_DISCOVER_URL = "https://api.themoviedb.org/3/discover/movie"
+_MOVIE_DETAIL_URL = "https://api.themoviedb.org/3/movie/{movie_id}?language=en-US"
+_GENRE_URL = "https://api.themoviedb.org/3/genre/movie/list?language=en"
+_POSTER_BASE_URL = "https://image.tmdb.org/t/p/original"
+
+_COLUMNS_TO_DROP: list[str] = [
+    "adult",
+    "backdrop_path",
+    "homepage",
+    "imdb_id",
+    "original_language",
+    "production_companies",
+    "success",
+    "production_countries",
+    "spoken_languages",
+    "status",
+    "tagline",
+    "video",
+    "belongs_to_collection.id",
+    "belongs_to_collection.name",
+    "status_code",
+    "belongs_to_collection.poster_path",
+    "belongs_to_collection.backdrop_path",
+    "status_message",
+]
 
 
 def get_genre_dictionary() -> list[dict]:
@@ -34,36 +53,45 @@ def get_genre_dictionary() -> list[dict]:
         Liste de dictionnaires contenant les genres (id, name).
     """
     headers = get_tmdb_headers()
-    response = requests.get(TMDB_GENRE_URL, headers=headers, timeout=10)
+    response = requests.get(_GENRE_URL, headers=headers, timeout=10)
     response.raise_for_status()
     return response.json()["genres"]
 
 
-def get_movie_ids(nb_pages: int = 1, strategy: str = "top_rated") -> list[int]:
+def get_movie_ids(
+    nb_pages: int = 1,
+    starting_date: Optional[str] = None,
+    ending_date: Optional[str] = None,
+    minimal_vote_count: int = 100,
+    ascending: bool = False) -> list[int]:
     """Récupère une liste d'IDs de films via l'API TMDB Discover.
 
     Remplace l'ancien `get_movie_ids_list`, `get_movie_ids_list_map`, `get_balanced_movie_list`
 
     Arguments:
         nb_pages: Nombre de pages à récupérer. Chaque page contient 20 films.
-        strategy : 
-            Stratégie de sélection parmi :
-            - ``"top_rated"`` : films les plus notés (par nombre de votes)
-            - ``"french_recent"`` : films français depuis 2016
-            - ``"balanced"`` : échantillon équilibré par genre
+        starting_date: Date de sortie minimale au format ``"YYYY-MM-DD"``.
+            Si ``None``, pas de borne inférieure.
+        ending_date: Date de sortie maximale au format ``"YYYY-MM-DD"``.
+            Si ``None``, pas de borne supérieure.
+        minimal_vote_count: Nombre minimum de votes requis.
+        ascending: Si ``True``, tri par date de sortie croissante ;
+            sinon décroissante.
 
     Returns
         Liste des identifiants TMDB des films.
     """
-    if strategy == "top_rated":
-        return _get_ids_top_rated(nb_pages)
-    if strategy == "french_recent":
-        return _get_ids_french_recent(nb_pages)
-    if strategy == "balanced":
-        return _get_ids_balanced(nb_pages)
+    return _get_ids_by_date(
+            nb_pages=nb_pages,
+            starting_date=starting_date,
+            ending_date=ending_date,
+            minimal_vote_count=minimal_vote_count,
+            ascending=ascending,
+        )
+    
     raise ValueError(
         f"Stratégie inconnue : '{strategy}'. "
-        "Utilisez 'top_rated', 'french_recent' ou 'balanced'."
+        "Utilisez 'default', 'top_rated', 'french_recent' ou 'balanced'."
     )
 
 
@@ -83,37 +111,49 @@ def get_movies_details(ids: list[int]) -> pd.DataFrame:
         raise ValueError("La liste d'identifiants est vide.")
 
     headers = get_tmdb_headers()
-    dataframes: list[pd.DataFrame] = []
+    movies: list[dict] = []
+    print("Fetching movie details...")
 
-    #rethrieving information and stocking it in a list of dataframes
     for movie_id in tqdm(ids):
-        url = f"{TMDB_MOVIE_URL}/{movie_id}?language=en-US"
-        response = requests.get(url, headers=headers, timeout=10)
-        time.sleep(0.1) #si trop lent, réduire
-        dataframes.append(pd.json_normalize(response.json())) #pas très efficace voir si on peut améliorer
-    return pd.concat(dataframes, ignore_index=True)
+        url = _MOVIE_DETAIL_URL.format(movie_id=movie_id)
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            movies.append(response.json())
+        except requests.exceptions.RequestException as exc:
+            print(f"Error on movie {movie_id}: {exc}")
+        finally:
+            time.sleep(0.1)
+
+    return pd.json_normalize(movies)
 
 
 def clean_dataset(df: pd.DataFrame, drop_original_title: bool = True) -> pd.DataFrame:
-    """Nettoie le DataFrame brut issu de ``get_movies_details``.
+    """Orchestrate the full cleaning pipeline on a raw movie DataFrame.
 
-    Applique successivement :
-    1. Suppression des lignes en erreur 
-    2. Suppression des lignes sans synopsis
-    3. Suppression des colonnes inutiles
-    4. Extraction du genre principal
-    5. Conservation du premier pays d'origine
-    6. Construction de l'URL complète de l'affiche
-    7. Ajout du nombre de caractères du synopsis et du titre
-    8. Conversion de la date en timestamp Unix
+    Steps applied in order:
 
-    Arguments:
-        df: DataFrame brut issu de ``get_movies_details``.
-        drop_original_title: Si True, supprime la colonne ``original_title``.
+    1. Drop rows with API errors (presence of ``status_message``).
+    2. Drop rows with no synopsis (``overview``).
+    3. Drop irrelevant columns (:func:`drop_useless_columns`).
+    4. Keep only the main genre (:func:`keep_main_genre`).
+    5. Keep only the first country of origin (:func:`keep_first_origin_country`).
+    6. Build the full poster URL (:func:`build_full_poster_path`).
+    7. Add character-count columns for title and overview (:func:`add_text_length_columns`).
+    8. Convert release date to a Unix timestamp (:func:`convert_date_to_timestamp`).
+
+    Args:
+        df: Raw DataFrame produced by :func:`get_movies_info`.
+        drop_original_title: If ``True``, the ``original_title`` column is dropped.
 
     Returns:
-        DataFrame nettoyé et enrichi.
-    """
+        Cleaned and enriched DataFrame.
+
+    Raises:
+        AssertionError: If ``df`` is ``None``.
+    """ 
+    assert df is not None, "No DataFrame was provided"
+
     result = df.copy()
 
     # get rid of ligns where there was a status_error (=no data could be rethrieved)
@@ -135,110 +175,65 @@ def clean_dataset(df: pd.DataFrame, drop_original_title: bool = True) -> pd.Data
 # récupération d'IDs
 # ---------------------------------------------------------------------------
 
+def _get_ids_by_date(
+    nb_pages: int,
+    starting_date: Optional[str] = None,
+    ending_date: Optional[str] = None,
+    minimal_vote_count: int = 100,
+    ascending: bool = False,
+) -> list[int]:
+    """Récupère les IDs de films filtrés par date et nombre de votes.
 
-def _get_ids_top_rated(nb_pages: int) -> list[int]:
-    """Récupère les IDs des films les plus notés (triés par vote_count).
-    
-    Cette fonction remplace `get_movie_ids_list`
+    remplace la fonction `get_movie_ids_list` dans tmdb_extraction.py
 
-    Arguments: 
-        nb_pages (int >=1): The number of pages in the Discover option we want to get data from. A page lists 20 movies.
+    Arguments:
+        nb_pages: Nombre de pages à récupérer (20 films par page).
+        starting_date: Date de sortie minimale (``YYYY-MM-DD``).
+        ending_date: Date de sortie maximale (``YYYY-MM-DD``).
+        minimal_vote_count: Nombre minimum de votes requis.
+        ascending: Si ``True``, tri par date croissante.
 
     Returns:
-        list of movie ids
-
+        Liste des identifiants TMDB des films.
     """
     headers = get_tmdb_headers()
-    ids: list[int] = []
+    params: dict[str, object] = {
+        "include_adult": "false",
+        "include_video": "false",
+        "language": "en-US",
+        "vote_count.gte": minimal_vote_count,
+        "sort_by": (
+            "primary_release_date.asc" if ascending
+            else "primary_release_date.desc"
+        ),
+    }
 
-    print("Récupération des IDs (top rated)...")
+    if starting_date is not None:
+        params["primary_release_date.gte"] = starting_date
+    if ending_date is not None:
+        params["primary_release_date.lte"] = ending_date
+
+    ids: list[int] = []
+    print("Fetching movie IDs...")
+
     for page in tqdm(range(1, nb_pages + 1)):
-        url = f"{TMDB_DISCOVER_URL}&page={page}&sort_by=vote_count.desc"
-        response = requests.get(url, headers=headers, timeout=10)
-        time.sleep(0.5) # to prevent overloading
-        ids.extend(movie["id"] for movie in response.json()["results"])
-    return ids
-
-
-def _get_ids_french_recent(nb_pages: int) -> list[int]:
-    """Récupère les IDs des films français sortis depuis 2016.
-    
-    Cette fonction remplace `get_movie_ids_list_map()`
-    """
-    headers = get_tmdb_headers()
-    base_url = (
-        "https://api.themoviedb.org/3/discover/movie"
-        "?include_adult=false&include_video=false"
-    )
-    ids: list[int] = []
-
-    #Récupération des IDs (films français récents)
-    for page in tqdm(range(1, nb_pages + 1)):
-        url = (
-            f"{base_url}&page={page}"
-            "&primary_release_date.gte=2016-01-01"
-            "&sort_by=primary_release_date.asc"
-            "&with_original_language=fr"
-        )
-        response = requests.get(url, headers=headers, timeout=10)
-        time.sleep(0.5)# to prevent overloading
-        ids.extend(movie["id"] for movie in response.json()["results"])
-    return ids
-
-
-def _get_ids_balanced(nb_pages: int) -> list[int]:
-    """Récupère un échantillon de films équilibré par genre.
-
-    Cette fonction remplace `get_balanced_movie_list()`
-
-    Pour chaque genre, récupère des films ayant uniquement ce genre
-    (les autres genres sont exclus via ``without_genres``).
-    """
-    headers = get_tmdb_headers()
-    genre_list = [genre["id"] for genre in get_genre_dictionary()]
-    ids: list[int] = []
-
-    print(f"Récupération des IDs (balanced, {len(genre_list)} genres)...")
-    for idx, genre_id in tqdm(enumerate(genre_list), total=len(genre_list)):
-        other_genres = genre_list[:idx] + genre_list[idx + 1 :]
-        excluded = "%2C".join(str(g) for g in other_genres)
-        for page in range(1, nb_pages + 1):
-            url = (
-                f"{TMDB_DISCOVER_URL}&page={page}"
-                f"&sort_by=revenue.asc&vote_count.gte=2"
-                f"&with_genres={genre_id}&without_genres={excluded}"
+        params["page"] = page
+        try:
+            response = requests.get(
+                _DISCOVER_URL, headers=headers, params=params, timeout=10,
             )
-            response = requests.get(url, headers=headers, timeout=10)
-            time.sleep(0.5)
-            ids.extend(movie["id"] for movie in response.json()["results"])
+            response.raise_for_status()
+            results = response.json().get("results", [])
+            ids.extend(movie["id"] for movie in results if "id" in movie)
+        except requests.exceptions.RequestException as exc:
+            print(f"Erreur page {page} : {exc}")
+
     return ids
 
 
 # ---------------------------------------------------------------------------
-# Fonctions privées — nettoyage
+# Fonctions nettoyage
 # ---------------------------------------------------------------------------
-
-_COLUMNS_TO_DROP = [
-    "adult",
-    "backdrop_path",
-    "belongs_to_collection",
-    "homepage",
-    "imdb_id",
-    "original_language",
-    "production_companies",
-    "success",
-    "production_countries",
-    "spoken_languages",
-    "status",
-    "tagline",
-    "video",
-    "belongs_to_collection.id",
-    "belongs_to_collection.name",
-    "status_code",
-    "belongs_to_collection.poster_path",
-    "belongs_to_collection.backdrop_path",
-    "status_message",
-]
 
 
 def _drop_useless_columns(df: pd.DataFrame, drop_original_title: bool = True) -> pd.DataFrame:
@@ -249,21 +244,28 @@ def _drop_useless_columns(df: pd.DataFrame, drop_original_title: bool = True) ->
     columns = list(_COLUMNS_TO_DROP)
     if drop_original_title:
         columns.append("original_title")
-    existing = [col for col in columns if col in df.columns] # Vérifier quelles colonnes sont présentes avant de les supprimer
+    existing = [col for col in columns if col in df.columns] 
     return df.drop(columns=existing)
 
 
 def _extract_main_genre(df: pd.DataFrame) -> pd.DataFrame:
-    """Extrait le genre principal (premier de la liste) de chaque film.
+    """Replace the genre list with the movie's primary genre.
 
-    Remplace la colonne ``genres`` (liste de dicts) par deux colonnes :
-    ``main_genre_id`` et ``main_genre_name``.
+    The ``genres`` column contains a list of ``{id, name}`` dictionaries.
+    This function extracts the first entry and creates two new columns:
+    ``main_genre_id`` and ``main_genre_name``.
 
-    Parameters:
-        df: a pandas data-frame where 'genre' is a list of genre dictionnaries.
+    Note:
+        Handles the case where ``genres`` has been serialised as a string
+        (e.g. after reading from a CSV) by applying :func:`ast.literal_eval`.
+
+
+    Arguments:
+        df: DataFrame containing a ``genres`` column.
 
     Returns:
-        a cleaned data-frame with no 'genre' but a 'main_genre_id' and a 'main_genre_name' column.
+        DataFrame without the ``genres`` column, replaced by ``main_genre_id``
+        and ``main_genre_name``.
     """
     result = df.copy()
 
@@ -272,16 +274,22 @@ def _extract_main_genre(df: pd.DataFrame) -> pd.DataFrame:
         result["genres"] = result["genres"].apply(ast.literal_eval)
 
     result = result.dropna(subset=["genres"])
-    result = result[result["genres"].apply(lambda x: len(x) > 0)]
+    result = result[result["genres"].apply(lambda x: len(x) > 0)].copy()
     result["main_genre_id"] = result["genres"].map(lambda x: x[0]["id"])
     result["main_genre_name"] = result["genres"].map(lambda x: x[0]["name"])
     return result.drop(columns=["genres"])
 
 
 def _keep_first_origin_country(df: pd.DataFrame) -> pd.DataFrame:
-    """Conserve uniquement le premier pays d'origine pour chaque film.
-    
-    Supprime les lignes où la liste des pays d'origine est vide.
+    """Retain only the first country of origin for each movie.
+
+    Rows whose ``origin_country`` is not a non-empty list are dropped.
+
+    Args:
+        df: DataFrame containing an ``origin_country`` column of list type.
+
+    Returns:
+        DataFrame with ``origin_country`` reduced to a single string value.
     """
     result = df[
         df["origin_country"].apply(lambda x: isinstance(x, list) and len(x) > 0)
@@ -291,24 +299,39 @@ def _keep_first_origin_country(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _build_poster_url(df: pd.DataFrame) -> pd.DataFrame:
-    """Changes the way the poster path is encoded
+    """Build the full poster URL from the relative TMDB path.
 
-    Parameters:
-        df: a pandas data-frame whith a 'poster_path' column
+    Replaces the ``poster_path`` column (relative path, e.g. ``/abc.jpg``)
+    with ``full_poster_path`` (absolute TMDB CDN URL).
+
+    Args:
+        df: DataFrame containing a ``poster_path`` column.
 
     Returns:
-        a pandas data frame with no 'poster_path' column but a 'full_poster_path' column containing the fulle poster url
+        DataFrame with ``full_poster_path`` in place of ``poster_path``.
     """
+
     result = df.copy()
-    result["full_poster_path"] = TMDB_IMAGE_BASE_URL + result["poster_path"]
+    result["full_poster_path"] = _POSTER_BASE_URL + result["poster_path"]
     return result.drop(columns=["poster_path"])
 
 
 def _add_text_length_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Ajoute le nombre de caractères du synopsis et du titre."""
+    """Convert ``release_date`` to a Unix timestamp (seconds since 1970-01-01).
+
+    The original ``release_date`` column is kept as ``datetime64``; a new
+    ``timestamp`` column (64-bit integer) is added alongside it.
+
+    Args:
+        df: DataFrame containing a ``release_date`` column parseable by
+            :func:`pandas.to_datetime`.
+
+    Returns:
+        DataFrame with ``release_date`` converted and ``timestamp`` added.
+    """
     result = df.copy()
-    result["overview_count"] = result["overview"].str.len()
-    result["title_count"] = result["title"].str.len()
+    result["title_char_count"] = result["title"].str.len()
+    result["overview_char_count"] = result["overview"].str.len()
     return result
 
 
@@ -321,4 +344,4 @@ def _add_timestamp(df: pd.DataFrame) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    print(0)
+    print("Module make_dataset chargé avec succès.")
