@@ -310,8 +310,7 @@ _DEFAULT_EN_PARAM_GRID: dict[str, list] = {
             "l1_ratio":          [0.5, 0.7, 0.9],
             "tfidf_max_features":[5000, 10000],
             "tfidf_ngram_range": [(1,1), (1,2)],
-            "tfidf_min_df":      [2, 5, 10, 20, 30],
-            "tfidf_max_df":      [0.6, 0.8, 0.9]
+            "tfidf_min_df":      [2, 5, 10, 20, 30]
 }
 
 

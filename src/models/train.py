@@ -28,7 +28,7 @@ import mlflow
 import mlflow.sklearn
 import pandas as pd
 
-from model_pipelines import (
+from src.models.model_pipelines import (
     create_elastic_net_pipeline,
     create_random_forest_pipeline,
     grid_search_elastic_net,
@@ -38,7 +38,11 @@ from model_pipelines import (
     TARGET,
     TEXT_FEATURES,
 )
-from tmdb_extraction import HEADERS, get_movie_ids_list, get_movies_info, clean_data
+from src.data.make_dataset import (
+    clean_dataset,
+    get_movie_ids,
+    get_movies_details,
+)
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -96,14 +100,13 @@ def load_or_fetch_data(
         return pd.read_csv(path)
 
     logger.info("No cache found at %s — fetching from TMDB API...", path)
-    ids = get_movie_ids_list(
-        headers=HEADERS,
+    ids = get_movie_ids(
         nb_pages=nb_pages,
         starting_date=starting_date,
         ending_date=ending_date,
     )
-    raw_df   = get_movies_info(ids=ids, headers=HEADERS)
-    clean_df = clean_data(raw_df)
+    raw_df   = get_movies_details(ids=ids)
+    clean_df = clean_dataset(raw_df)
 
     path.parent.mkdir(parents=True, exist_ok=True)
     clean_df.to_csv(path, index=False)
@@ -140,7 +143,7 @@ def _log_grid_search_runs(
         the lowest ``rmse_mean``.
     """
     metric_cols = {"rmse_mean", "rmse_std"}
-    best_row    = results.iloc[0]
+    best_row = results.iloc[0]
     best_params = {k: v for k, v in best_row.items() if k not in metric_cols}
     best_pipeline = None
 
@@ -227,16 +230,16 @@ def run(
 
         if best_rf_rmse <= best_en_rmse:
             best_model_type = "random_forest"
-            best_params     = rf_params
-            best_pipeline   = rf_pipeline
-            best_rmse       = best_rf_rmse
-            best_std        = rf_results.iloc[0]["rmse_std"]
+            best_params = rf_params
+            best_pipeline = rf_pipeline
+            best_rmse = best_rf_rmse
+            best_std = rf_results.iloc[0]["rmse_std"]
         else:
             best_model_type = "elastic_net"
-            best_params     = en_params
-            best_pipeline   = en_pipeline
-            best_rmse       = best_en_rmse
-            best_std        = en_results.iloc[0]["rmse_std"]
+            best_params = en_params
+            best_pipeline = en_pipeline
+            best_rmse = best_en_rmse
+            best_std = en_results.iloc[0]["rmse_std"]
 
         logger.info(
             "Best model: %s | RMSE: %,.0f (+/- %,.0f)",
@@ -300,10 +303,10 @@ def _parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = _parse_args()
     run(
-        data_path       = args.data_path,
+        data_path = args.data_path,
         experiment_name = args.experiment_name,
-        nb_pages        = args.nb_pages,
-        n_folds         = args.n_folds,
-        starting_date   = args.starting_date,
-        ending_date     = args.ending_date,
+        nb_pages = args.nb_pages,
+        n_folds = args.n_folds,
+        starting_date = args.starting_date,
+        ending_date = args.ending_date,
     )
