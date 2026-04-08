@@ -10,3 +10,4 @@ tqdm==4.67.1
 s3fs
 tqdm
 PyYAML
+mlflow
