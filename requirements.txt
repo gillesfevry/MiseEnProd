@@ -11,3 +11,4 @@ s3fs
 tqdm
 PyYAML
 mlflow
+skops
