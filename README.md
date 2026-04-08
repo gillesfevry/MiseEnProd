@@ -28,13 +28,11 @@ Nouveau README :
 
 ## Description du projet
 
-Ce projet explore les données cinématographiques issues de **TMDB** et de **data.gouv** (lieux de tournage à Paris). Son objectif ets de savoir ce qu'on peut diree d'un film sans l'avoir vu.
+Ce projet explore les données cinématographiques issues de **TMDB** et de **data.gouv** (lieux de tournage à Paris). Son objectif est de prédire les revenus d'un film à partir de ces données.
 
 ### Objectifs
 - **Récupération et nettoyage** des données via l'API TMDB
-- **Statistiques descriptives** sur les films 
-- **Prédiction de la note** d'un film via modele
-- **Prédiction du genre** d'un film via  modele
+- **Prédiction du revenu** d'un film via  modele
 
 ## Structure du projet
 
@@ -42,18 +40,15 @@ Ce projet explore les données cinématographiques issues de **TMDB** et de **da
 MiseEnProd-main/
 ├── License
 ├── data/
-│   ├── raw/              # The original, immutable data dump. (on S3)
-│   └── processed/        # The final, canonical data sets for modeling. (on S3)
+│   ├── movies_clean.csv              # Ce télécharge après la première utilisation, sinon va directement requeter l'API
 │
-├── models/               # Trained and serialized models, model predictions, or model summaries
-│
-├── notebooks/            # Jupyter notebooks for exploration.
+├── notebooks/            # Jupyter notebooks for exploration and previous codes.
 │
 ├── reports/              # Generated analysis as HTML, PDF, LaTeX, etc.
 │   └── figures/          # Graphics.
 │
 ├── src/                  # Source code for use in this project.
-│   ├── config.py         # Charge of secret if needed
+
 │
 │   ├── data/                     # Scripts to download or generate data.
 │   │   ├── make_dataset.py       # for cleaning the data
@@ -63,16 +58,16 @@ MiseEnProd-main/
 │   │   └── build_features.py     # Construction des features
 │
 │   ├── models/                   # Scripts to train models and then use trained models to make predictions.
-│   │   ├── predict_genre.py      # Genre's prediction 
-│   │   └── predict_rating.py     # Note prediction 
+│   │   ├── config.py             # Charge of secret if needed
+│   │   ├── model_pipelines.py    # 
+│   │   └── train.py              # Revenu prediction
 │
-│   └── visualization/            # Scripts to create exploratory and results oriented visualizations.
-│       └── visualize.py          
+│   └── visualization/            # Scripts to create exploratory and results oriented visualizations.       
 │
 ├── .gitignore
 ├── pyproject.toml                # Configuration Ruff (linter/formatter)
-├── requirements.txt              # Dépendances Python
-├── secrets.yaml.example          # Template pour les secrets
+├── requirements.txt              # Python ependancies
+├── secrets.yaml                  # Secret with token for the API
 └── README.md
 ```
 
@@ -102,6 +97,7 @@ tmdb:
   bearer_token: "Notre_TOKEN"
 
 ```
+Où notre token est le token de l'API TMDB ( pour le moement il est encore hardcodé dans l'ancien code dans \notebooks\tmdb_extraction.py il faut donc le mettre dans le secrets.yaml
 
 5. **Télécharger les données**
 (Voir s'il vaut mieux pas importer directement les données quand on en a besoin, plutot que de les télécharger, mais le faire à la fin).
@@ -110,9 +106,18 @@ Attention, il faut revoir comment implémenter :
 
 DATA_DIR, BUCKET, FILES. (Pour le moment en brut dans le script, j'ai testé en mettant bien els csv sur s3 et ça marche mais il faudra plutot les mettre dans un fichier de config et expliquer ici quoi mettre dans la config pour lancer)
 
-
+Mais je crois que du coup même sans avoir les données ça va directment les télécharger depuis l'API si on a bien rempli le yaml.
 
 ## Utilisation
+
+`python -m src.models.train`
+
+Puis sur Onyxia run : 
+
+`mlflow ui` dans le bash et ensuite 
+
+Puis dans les ports sur VScode il y a le lien (n'a pas marché pour moi)
+
 
 
 ## Licence
