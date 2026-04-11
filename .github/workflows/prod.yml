@@ -28,4 +28,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: rebeccable/application:latest
+          tags: rebeccable/mise_en_prod_projet:latest
