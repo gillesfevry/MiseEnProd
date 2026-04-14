@@ -27,6 +27,7 @@ from pathlib import Path
 import mlflow
 import mlflow.sklearn
 import pandas as pd
+import sklearn
 
 from src.models.model_pipelines import (
     create_elastic_net_pipeline,
@@ -180,7 +181,7 @@ def run(
     n_folds: int,
     starting_date: str,
     ending_date: str,
-) -> None:
+    ) -> None:
     """Execute the full training and logging pipeline.
 
     Steps:
@@ -251,7 +252,10 @@ def run(
         mlflow.log_params({f"best_{k}": v for k, v in best_params.items()})
         mlflow.log_metric("best_rmse_mean", best_rmse)
         mlflow.log_metric("best_rmse_std",  best_std)
-        mlflow.sklearn.log_model(best_pipeline, artifact_path="best_model")
+        mlflow.sklearn.log_model(best_pipeline, 
+            artifact_path="best_model",
+            pip_requirements=[f"scikit-learn=={sklearn.__version__}"]
+        )
 
         logger.info("Run complete. Launch `mlflow ui` to explore results.")
 
