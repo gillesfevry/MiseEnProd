@@ -13,6 +13,6 @@ COPY pyproject.toml .
 
 RUN uv sync --python 3.12
 
-COPY main.py .
+COPY src/models/train.py .
 COPY src ./src
-CMD ["uv", "run", "main.py"]
+CMD ["uv", "run", "src/models/train.py"]
