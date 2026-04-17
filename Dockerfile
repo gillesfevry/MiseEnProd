@@ -14,6 +14,6 @@ COPY pyproject.toml .
 RUN uv sync --python 3.12
 
 COPY app ./app
-COPY src/models/train.py .
 COPY src ./src
+COPY ./src/models/train.py .
 CMD ["bash", "-c", "./app/run.sh"]
