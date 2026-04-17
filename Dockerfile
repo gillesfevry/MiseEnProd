@@ -8,7 +8,6 @@ RUN apt-get -y update && \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin/:$PATH"
 
-WORKDIR /app
 
 # Install project dependencies
 COPY pyproject.toml .
