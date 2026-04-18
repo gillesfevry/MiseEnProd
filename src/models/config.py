@@ -4,6 +4,7 @@ Pour ne pas avoir à mettre les clefs en brut dans le code
 
 from pathlib import Path
 import yaml
+import os 
 
 SECRETS_PATH = Path(__file__).resolve().parents[2] / "secrets.yaml"
 
@@ -15,6 +16,13 @@ def load_secrets() -> dict:
         dict
             Dictionnaire contenant les secrets du projet.
     """
+    token_env = os.getenv("JETON_API")
+    if token_env:
+        return {
+            "tmdb": {
+                "bearer_token": token_env
+            }
+        }
 
     if not SECRETS_PATH.exists():
         raise FileNotFoundError(
