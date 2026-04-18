@@ -4,6 +4,7 @@ Pour ne pas avoir à mettre les clefs en brut dans le code
 
 from pathlib import Path
 import yaml
+import os 
 
 SECRETS_PATH = Path(__file__).resolve().parents[2] / "secrets.yaml"
 
