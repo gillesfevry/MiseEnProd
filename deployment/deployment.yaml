@@ -20,7 +20,7 @@ spec:
         ports:
         - containerPort: 8000
         env:
-        - name: JETON_API
+        - name: bearer_token
           valueFrom:
             secretKeyRef:
               name: api-jeton-movie

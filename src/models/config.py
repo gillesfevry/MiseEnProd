@@ -15,6 +15,13 @@ def load_secrets() -> dict:
         dict
             Dictionnaire contenant les secrets du projet.
     """
+    token_env = os.getenv("bearer_token")
+    if token_env:
+        return {
+            "tmdb": {
+                "bearer_token": token_env
+            }
+        }
 
     if not SECRETS_PATH.exists():
         raise FileNotFoundError(
