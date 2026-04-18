@@ -15,7 +15,7 @@ def load_secrets() -> dict:
         dict
             Dictionnaire contenant les secrets du projet.
     """
-    token_env = os.getenv("bearer_token")
+    token_env = os.getenv("JETON_API")
     if token_env:
         return {
             "tmdb": {
