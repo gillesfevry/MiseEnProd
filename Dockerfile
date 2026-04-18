@@ -8,11 +8,14 @@ RUN apt-get -y update && \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin/:$PATH"
 
+
 # Install project dependencies
 COPY pyproject.toml .
 
 RUN uv sync --python 3.12
 
-COPY main.py .
+COPY app ./app
+COPY train.py .
 COPY src ./src
-CMD ["uv", "run", "main.py"]
+
+CMD ["bash", "-c", "./app/run.sh"]

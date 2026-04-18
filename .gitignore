@@ -180,3 +180,4 @@ mlflow.db
 
 # Fichiers CSV (les données sont sur S3)
 *.csv
+*.skops
