@@ -17,6 +17,5 @@ RUN uv sync --python 3.12
 COPY app ./app
 COPY train.py .
 COPY src ./src
-COPY secrets.yaml .
 
 CMD ["bash", "-c", "./app/run.sh"]
