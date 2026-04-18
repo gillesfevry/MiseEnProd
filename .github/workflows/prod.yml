@@ -25,7 +25,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: gillesfevry/MiseEnProd
+          images: rebeccable/mise_en_prod_projet
 
       -
         name: Login to Docker Hub
