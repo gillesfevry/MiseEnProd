@@ -26,7 +26,7 @@ model = mlflow.sklearn.load_model(model_uri)
 
 app = FastAPI(
     title="Prédiction du revenu d'un film",
-    description="Application de prédiction du revenu d'un film",
+    description="Application de prédiction du revenu d'un film 🎬​",
 )
 
 

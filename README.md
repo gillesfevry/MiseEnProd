@@ -118,8 +118,6 @@ Puis sur Onyxia run :
 
 Puis dans les ports sur VScode il y a le lien (n'a pas marché pour moi)
 
-
-
 ## Licence
 
 Ce projet est distribué sous licence MIT. Voir le fichier [LICENSE](LICENSE).
@@ -127,3 +125,7 @@ Ce projet est distribué sous licence MIT. Voir le fichier [LICENSE](LICENSE).
 ## Auteurs
 
 Projet réalisé dans le cadre du cours "MISE EN PRODUCTION" en A à l'ENSAE.
+
+## Automatisation
+
+Le deploiement de l'application (https://movie.lab.sspcloud.fr/) est contrôlé par un autre dépôt.
