@@ -28,6 +28,7 @@ import mlflow
 import mlflow.sklearn
 import pandas as pd
 import sklearn
+import skops.io as sio
 
 from src.models.model_pipelines import (
     create_elastic_net_pipeline,
@@ -65,6 +66,7 @@ DEFAULT_NB_PAGES       = 20
 DEFAULT_N_FOLDS        = 10
 DEFAULT_STARTING_DATE  = "2000-01-01"
 DEFAULT_ENDING_DATE    = "2023-12-31"
+DEFAULT_MODELS_DIR     = "models"
 
 # ---------------------------------------------------------------------------
 # Data loading
@@ -125,6 +127,7 @@ def _log_grid_search_runs(
     results: pd.DataFrame,
     model_type: str,
     data: pd.DataFrame,
+    models_dir: str = DEFAULT_MODELS_DIR,
 ) -> tuple[dict, object]:
     """Log every grid search candidate as a nested MLflow run.
 
@@ -132,12 +135,16 @@ def _log_grid_search_runs(
     ``rmse_mean`` is also returned so the caller can compare across model
     families.
 
+    After the grid search, the best pipeline is refit on all data and saved
+    locally as a ``.skops`` file under ``models_dir``.
+
     Args:
         results: DataFrame produced by :func:`grid_search_random_forest` or
             :func:`grid_search_elastic_net`, sorted by ``rmse_mean``.
         model_type: Human-readable label (``"random_forest"`` or
             ``"elastic_net"``), used to tag each run.
         data: Full cleaned DataFrame, used to refit the best pipeline.
+        models_dir: Directory where the ``.skops`` file will be saved.
 
     Returns:
         Tuple of ``(best_params_dict, fitted_pipeline)`` for the row with
@@ -166,6 +173,14 @@ def _log_grid_search_runs(
         best_pipeline = create_elastic_net_pipeline(**best_params)
 
     best_pipeline.fit(X, y)
+
+    # Save pipeline locally as .skops
+    output_dir = Path(models_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    model_path = output_dir / f"{model_type}.skops"
+    sio.dump(best_pipeline, model_path)
+    logger.info("Pipeline saved to %s", model_path)
+
     return best_params, best_pipeline
 
 
@@ -181,7 +196,8 @@ def run(
     n_folds: int,
     starting_date: str,
     ending_date: str,
-    ) -> None:
+    models_dir: str = DEFAULT_MODELS_DIR,
+) -> None:
     """Execute the full training and logging pipeline.
 
     Steps:
@@ -192,6 +208,8 @@ def run(
        a nested run.
     4. Select the overall best model, log its params, metrics, and
        serialised pipeline to the parent run.
+    5. Save the best pipeline locally as ``best_model.skops`` under
+       ``models_dir`` and attach it as an MLflow artifact.
 
     Args:
         data_path: Path to CSV cache (loaded if present, saved otherwise).
@@ -200,6 +218,7 @@ def run(
         n_folds: Number of cross-validation folds.
         starting_date: Earliest TMDB release date filter.
         ending_date: Latest TMDB release date filter.
+        models_dir: Directory where ``.skops`` model files are saved.
     """
     # -- Data ------------------------------------------------------------------
     df = load_or_fetch_data(data_path, nb_pages, starting_date, ending_date)
@@ -218,12 +237,16 @@ def run(
         # -- Random Forest grid search -----------------------------------------
         logger.info("Starting Random Forest grid search...")
         rf_results = grid_search_random_forest(data=df)
-        rf_params, rf_pipeline = _log_grid_search_runs(rf_results, "random_forest", df)
+        rf_params, rf_pipeline = _log_grid_search_runs(
+            rf_results, "random_forest", df, models_dir
+        )
 
         # -- Elastic Net grid search -------------------------------------------
         logger.info("Starting Elastic Net grid search...")
         en_results = grid_search_elastic_net(data=df)
-        en_params, en_pipeline = _log_grid_search_runs(en_results, "elastic_net", df)
+        en_params, en_pipeline = _log_grid_search_runs(
+            en_results, "elastic_net", df, models_dir
+        )
 
         # -- Select best model across families ---------------------------------
         best_rf_rmse = rf_results.iloc[0]["rmse_mean"]
@@ -231,30 +254,37 @@ def run(
 
         if best_rf_rmse <= best_en_rmse:
             best_model_type = "random_forest"
-            best_params = rf_params
-            best_pipeline = rf_pipeline
-            best_rmse = best_rf_rmse
-            best_std = rf_results.iloc[0]["rmse_std"]
+            best_params     = rf_params
+            best_pipeline   = rf_pipeline
+            best_rmse       = best_rf_rmse
+            best_std        = rf_results.iloc[0]["rmse_std"]
         else:
             best_model_type = "elastic_net"
-            best_params = en_params
-            best_pipeline = en_pipeline
-            best_rmse = best_en_rmse
-            best_std = en_results.iloc[0]["rmse_std"]
+            best_params     = en_params
+            best_pipeline   = en_pipeline
+            best_rmse       = best_en_rmse
+            best_std        = en_results.iloc[0]["rmse_std"]
 
         logger.info(
             "Best model: %s | RMSE: %,.0f (+/- %,.0f)",
             best_model_type, best_rmse, best_std,
         )
 
+        # -- Save best model locally as .skops --------------------------------
+        best_model_path = Path(models_dir) / "best_model.skops"
+        sio.dump(best_pipeline, best_model_path)
+        logger.info("Best pipeline saved to %s", best_model_path)
+
         # -- Log best model to parent run -------------------------------------
         mlflow.set_tag("best_model_type", best_model_type)
         mlflow.log_params({f"best_{k}": v for k, v in best_params.items()})
         mlflow.log_metric("best_rmse_mean", best_rmse)
         mlflow.log_metric("best_rmse_std",  best_std)
-        mlflow.sklearn.log_model(best_pipeline, 
+        mlflow.log_artifact(str(best_model_path), artifact_path="best_model")
+        mlflow.sklearn.log_model(
+            best_pipeline,
             artifact_path="best_model",
-            pip_requirements=[f"scikit-learn=={sklearn.__version__}"]
+            pip_requirements=[f"scikit-learn=={sklearn.__version__}"],
         )
 
         logger.info("Run complete. Launch `mlflow ui` to explore results.")
@@ -301,16 +331,22 @@ def _parse_args() -> argparse.Namespace:
         default=DEFAULT_ENDING_DATE,
         help=f"Latest release date YYYY-MM-DD (default: {DEFAULT_ENDING_DATE})",
     )
+    parser.add_argument(
+        "--models-dir",
+        default=DEFAULT_MODELS_DIR,
+        help=f"Directory where .skops model files are saved (default: {DEFAULT_MODELS_DIR})",
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = _parse_args()
     run(
-        data_path = args.data_path,
+        data_path       = args.data_path,
         experiment_name = args.experiment_name,
-        nb_pages = args.nb_pages,
-        n_folds = args.n_folds,
-        starting_date = args.starting_date,
-        ending_date = args.ending_date,
+        nb_pages        = args.nb_pages,
+        n_folds         = args.n_folds,
+        starting_date   = args.starting_date,
+        ending_date     = args.ending_date,
+        models_dir      = args.models_dir,
     )
