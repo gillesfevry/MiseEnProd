@@ -54,12 +54,12 @@ logger = logging.getLogger(__name__)
 # Defaults
 # ---------------------------------------------------------------------------
 
-DEFAULT_DATA_PATH      = "data/movies_clean.csv"
-DEFAULT_EXPERIMENT     = "movie_revenue_prediction"
-DEFAULT_NB_PAGES       = 20
-DEFAULT_N_FOLDS        = 10
-DEFAULT_STARTING_DATE  = "2000-01-01"
-DEFAULT_ENDING_DATE    = "2023-12-31"
+DEFAULT_DATA_PATH = "data/movies_clean.csv"
+DEFAULT_EXPERIMENT = "movie_revenue_prediction"
+DEFAULT_NB_PAGES = 20
+DEFAULT_N_FOLDS = 10
+DEFAULT_STARTING_DATE = "2000-01-01"
+DEFAULT_ENDING_DATE = "2023-12-31"
 
 # ---------------------------------------------------------------------------
 # Data loading
@@ -102,7 +102,7 @@ def load_or_fetch_data(
         starting_date=starting_date,
         ending_date=ending_date,
     )
-    raw_df   = get_movies_info(ids=ids, headers=HEADERS)
+    raw_df = get_movies_info(ids=ids, headers=HEADERS)
     clean_df = clean_data(raw_df)
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -140,7 +140,7 @@ def _log_grid_search_runs(
         the lowest ``rmse_mean``.
     """
     metric_cols = {"rmse_mean", "rmse_std"}
-    best_row    = results.iloc[0]
+    best_row = results.iloc[0]
     best_params = {k: v for k, v in best_row.items() if k not in metric_cols}
     best_pipeline = None
 
@@ -150,7 +150,7 @@ def _log_grid_search_runs(
             mlflow.set_tag("model_type", model_type)
             mlflow.log_params(params)
             mlflow.log_metric("rmse_mean", row["rmse_mean"])
-            mlflow.log_metric("rmse_std",  row["rmse_std"])
+            mlflow.log_metric("rmse_std", row["rmse_std"])
 
     # Refit the best pipeline on all data
     X = data[TEXT_FEATURES + CATEGORICAL_FEATURES + NUMERIC_FEATURES]
@@ -205,11 +205,11 @@ def run(
     mlflow.set_experiment(experiment_name)
 
     with mlflow.start_run(run_name="grid_search_all_models"):
-        mlflow.log_param("data_path",     data_path)
-        mlflow.log_param("n_folds",       n_folds)
-        mlflow.log_param("nb_rows",       len(df))
+        mlflow.log_param("data_path", data_path)
+        mlflow.log_param("n_folds", n_folds)
+        mlflow.log_param("nb_rows", len(df))
         mlflow.log_param("starting_date", starting_date)
-        mlflow.log_param("ending_date",   ending_date)
+        mlflow.log_param("ending_date", ending_date)
 
         # -- Random Forest grid search -----------------------------------------
         logger.info("Starting Random Forest grid search...")
@@ -227,27 +227,29 @@ def run(
 
         if best_rf_rmse <= best_en_rmse:
             best_model_type = "random_forest"
-            best_params     = rf_params
-            best_pipeline   = rf_pipeline
-            best_rmse       = best_rf_rmse
-            best_std        = rf_results.iloc[0]["rmse_std"]
+            best_params = rf_params
+            best_pipeline = rf_pipeline
+            best_rmse = best_rf_rmse
+            best_std = rf_results.iloc[0]["rmse_std"]
         else:
             best_model_type = "elastic_net"
-            best_params     = en_params
-            best_pipeline   = en_pipeline
-            best_rmse       = best_en_rmse
-            best_std        = en_results.iloc[0]["rmse_std"]
+            best_params = en_params
+            best_pipeline = en_pipeline
+            best_rmse = best_en_rmse
+            best_std = en_results.iloc[0]["rmse_std"]
 
         logger.info(
             "Best model: %s | RMSE: %,.0f (+/- %,.0f)",
-            best_model_type, best_rmse, best_std,
+            best_model_type,
+            best_rmse,
+            best_std,
         )
 
         # -- Log best model to parent run -------------------------------------
         mlflow.set_tag("best_model_type", best_model_type)
         mlflow.log_params({f"best_{k}": v for k, v in best_params.items()})
         mlflow.log_metric("best_rmse_mean", best_rmse)
-        mlflow.log_metric("best_rmse_std",  best_std)
+        mlflow.log_metric("best_rmse_std", best_std)
         mlflow.sklearn.log_model(best_pipeline, artifact_path="best_model")
 
         logger.info("Run complete. Launch `mlflow ui` to explore results.")
@@ -300,10 +302,10 @@ def _parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = _parse_args()
     run(
-        data_path       = args.data_path,
-        experiment_name = args.experiment_name,
-        nb_pages        = args.nb_pages,
-        n_folds         = args.n_folds,
-        starting_date   = args.starting_date,
-        ending_date     = args.ending_date,
+        data_path=args.data_path,
+        experiment_name=args.experiment_name,
+        nb_pages=args.nb_pages,
+        n_folds=args.n_folds,
+        starting_date=args.starting_date,
+        ending_date=args.ending_date,
     )
