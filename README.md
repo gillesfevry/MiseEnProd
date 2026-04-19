@@ -50,7 +50,6 @@ MiseEnProd/
 ├── .github/workflows/            # CI/CD GitHub Actions
 │   ├── test.yaml                 # Tests automatisés
 │   └── prod.yml                  # Déploiement en production
-├── data/                         # Données (non versionnées, voir .gitignore)
 ├── .gitignore
 ├── requirements.txt              # Dépendances Python (avec versions exactes)
 ├── pyproject.toml                # Configuration du projet et de Ruff
