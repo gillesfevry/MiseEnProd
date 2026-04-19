@@ -6,6 +6,7 @@ on:
       - main
       - deployment
       - automatisation
+      - monitoring_api
     tags:
       - 'v*.*.*'
 
