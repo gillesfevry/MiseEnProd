@@ -146,19 +146,14 @@ Ouvrir le navigateur à l'adresse `http://localhost:5000`.
 
 ## Qualité du code
 
-Le projet utilise [Ruff](https://docs.astral.sh/ruff/) comme linter et formatter :
-
-```bash
-ruff check src/ --fix
-ruff format src/
-```
-
-La configuration de Ruff se trouve dans `pyproject.toml`.
-
 ## Licence
 
 Ce projet est distribué sous licence MIT. Voir le fichier [LICENSE](LICENSE).
 
 ## Auteurs
 
-Projet réalisé dans le cadre du cours "Mise en production" à l'ENSAE.
+Projet réalisé dans le cadre du cours "MISE EN PRODUCTION" en A à l'ENSAE.
+
+## Automatisation
+
+Le deploiement de l'application (https://movie.lab.sspcloud.fr/) est contrôlé par un autre dépôt.
