@@ -111,31 +111,42 @@ def _build_preprocessor(
     Returns:
         Configured :class:`~sklearn.compose.ColumnTransformer` instance.
     """
-    text_pipeline = Pipeline([
-        ("combine", FunctionTransformer(_combine_text, validate=False)),
-        ("tfidf", TfidfVectorizer(
-            max_features=tfidf_max_features,
-            stop_words="english",
-            ngram_range=tfidf_ngram_range,
-            min_df=tfidf_min_df,
-        )),
-    ])
+    text_pipeline = Pipeline(
+        [
+            ("combine", FunctionTransformer(_combine_text, validate=False)),
+            (
+                "tfidf",
+                TfidfVectorizer(
+                    max_features=tfidf_max_features,
+                    stop_words="english",
+                    ngram_range=tfidf_ngram_range,
+                    min_df=tfidf_min_df,
+                ),
+            ),
+        ]
+    )
 
-    numeric_pipeline = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", StandardScaler()),
-    ])
+    numeric_pipeline = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler()),
+        ]
+    )
 
-    categorical_pipeline = Pipeline([
-        ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("onehot", OneHotEncoder(handle_unknown="ignore")),
-    ])
+    categorical_pipeline = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("onehot", OneHotEncoder(handle_unknown="ignore")),
+        ]
+    )
 
-    return ColumnTransformer([
-        ("text", text_pipeline, TEXT_FEATURES),
-        ("num",  numeric_pipeline, NUMERIC_FEATURES),
-        ("cat",  categorical_pipeline, CATEGORICAL_FEATURES),
-    ])
+    return ColumnTransformer(
+        [
+            ("text", text_pipeline, TEXT_FEATURES),
+            ("num", numeric_pipeline, NUMERIC_FEATURES),
+            ("cat", categorical_pipeline, CATEGORICAL_FEATURES),
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -170,16 +181,23 @@ def create_random_forest_pipeline(
         >>> pipeline = create_random_forest_pipeline(n_estimators=200, max_depth=20)
         >>> pipeline.fit(X_train, y_train)
     """
-    preprocessor = _build_preprocessor(tfidf_max_features, tfidf_ngram_range, tfidf_min_df)
+    preprocessor = _build_preprocessor(
+        tfidf_max_features, tfidf_ngram_range, tfidf_min_df
+    )
 
-    return Pipeline([
-        ("preprocessing", preprocessor),
-        ("model", RandomForestRegressor(
-            n_estimators=n_estimators,
-            max_depth=max_depth,
-            random_state=random_state,
-        )),
-    ])
+    return Pipeline(
+        [
+            ("preprocessing", preprocessor),
+            (
+                "model",
+                RandomForestRegressor(
+                    n_estimators=n_estimators,
+                    max_depth=max_depth,
+                    random_state=random_state,
+                ),
+            ),
+        ]
+    )
 
 
 def create_elastic_net_pipeline(
@@ -227,7 +245,9 @@ def create_elastic_net_pipeline(
         >>> pipeline = create_elastic_net_pipeline(alpha=0.1, l1_ratio=0.7)
         >>> pipeline.fit(X_train, y_train)
     """
-    preprocessor = _build_preprocessor(tfidf_max_features, tfidf_ngram_range, tfidf_min_df)
+    preprocessor = _build_preprocessor(
+        tfidf_max_features, tfidf_ngram_range, tfidf_min_df
+    )
 
     regressor = TransformedTargetRegressor(
         regressor=ElasticNet(
@@ -239,10 +259,12 @@ def create_elastic_net_pipeline(
         transformer=StandardScaler(),
     )
 
-    return Pipeline([
-        ("preprocessing", preprocessor),
-        ("model", regressor),
-    ])
+    return Pipeline(
+        [
+            ("preprocessing", preprocessor),
+            ("model", regressor),
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -294,11 +316,11 @@ def model_cross_validation(
 
 #: Default hyperparameter grid for Random Forest grid search.
 _DEFAULT_RF_PARAM_GRID: dict[str, list] = {
-    "n_estimators":       [100, 200],
-    "max_depth":          [None],
+    "n_estimators": [100, 200],
+    "max_depth": [None],
     "tfidf_max_features": [1000, 3000, 5000],
-    "tfidf_ngram_range":  [(1,1), (1,2), (2,3)],
-    "tfidf_min_df":       [2, 5],
+    "tfidf_ngram_range": [(1, 1), (1, 2), (2, 3)],
+    "tfidf_min_df": [2, 5],
 }
 
 
@@ -306,11 +328,11 @@ _DEFAULT_RF_PARAM_GRID: dict[str, list] = {
 #: Note: ``alpha=0.01`` is intentionally excluded — very low regularisation
 #: causes convergence failures even with target scaling and high ``max_iter``.
 _DEFAULT_EN_PARAM_GRID: dict[str, list] = {
-            "alpha":             [0.01, 0.1, 1.0],
-            "l1_ratio":          [0.5, 0.7, 0.9],
-            "tfidf_max_features":[5000, 10000],
-            "tfidf_ngram_range": [(1,1), (1,2)],
-            "tfidf_min_df":      [2, 5, 10, 20, 30]
+    "alpha": [0.01, 0.1, 1.0],
+    "l1_ratio": [0.5, 0.7, 0.9],
+    "tfidf_max_features": [5000, 10000],
+    "tfidf_ngram_range": [(1, 1), (1, 2)],
+    "tfidf_min_df": [2, 5, 10, 20, 30],
 }
 
 
@@ -343,18 +365,18 @@ def grid_search_random_forest(
     if param_grid is None:
         param_grid = _DEFAULT_RF_PARAM_GRID
 
-    keys         = list(param_grid.keys())
+    keys = list(param_grid.keys())
     combinations = list(itertools.product(*param_grid.values()))
 
     logger.info("%d combinations to test...", len(combinations))
     results: list[dict] = []
 
     for combo in combinations:
-        params   = dict(zip(keys, combo))
+        params = dict(zip(keys, combo))
         pipeline = create_random_forest_pipeline(**params)
-        scores   = model_cross_validation(data=data, pipeline=pipeline)
-        rmse     = (-scores).mean()
-        std      = (-scores).std()
+        scores = model_cross_validation(data=data, pipeline=pipeline)
+        rmse = (-scores).mean()
+        std = (-scores).std()
 
         logger.info("RMSE: %s (+/- %s) | %s", f"{rmse:,.0f}", f"{std:,.0f}", params)
         results.append({**params, "rmse_mean": rmse, "rmse_std": std})
@@ -391,18 +413,18 @@ def grid_search_elastic_net(
     if param_grid is None:
         param_grid = _DEFAULT_EN_PARAM_GRID
 
-    keys         = list(param_grid.keys())
+    keys = list(param_grid.keys())
     combinations = list(itertools.product(*param_grid.values()))
 
     logger.info("%d combinations to test...", len(combinations))
     results: list[dict] = []
 
     for combo in combinations:
-        params   = dict(zip(keys, combo))
+        params = dict(zip(keys, combo))
         pipeline = create_elastic_net_pipeline(**params)
-        scores   = model_cross_validation(data=data, pipeline=pipeline)
-        rmse     = (-scores).mean()
-        std      = (-scores).std()
+        scores = model_cross_validation(data=data, pipeline=pipeline)
+        rmse = (-scores).mean()
+        std = (-scores).std()
 
         logger.info("RMSE: %s (+/- %s) | %s", f"{rmse:,.0f}", f"{std:,.0f}", params)
         results.append({**params, "rmse_mean": rmse, "rmse_std": std})
