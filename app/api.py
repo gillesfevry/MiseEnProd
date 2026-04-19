@@ -41,7 +41,7 @@ def show_welcome_page():
 
 
 @app.get("/predict", tags=["Predict"])
-async def predict() -> str:
+async def predict():
     """ """
 
     today = datetime.now()
@@ -59,4 +59,4 @@ async def predict() -> str:
     df_to_predict = pd.read_csv("data/test.csv")
     prediction = model.predict(df_to_predict)
 
-    return prediction
+    return prediction.tolist()
