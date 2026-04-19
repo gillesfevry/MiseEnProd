@@ -7,7 +7,7 @@ import skops.io as sio
 
 app = FastAPI(
     title="Prédiction du revenu d'un film",
-    description="Application de prédiction du revenu d'un film",
+    description="Application de prédiction du revenu d'un film en fonction de ses caractéristiques",
 )
 
 
