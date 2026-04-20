@@ -6,11 +6,6 @@ from pathlib import Path
 import skops.io as sio
 import logging
 
-from src.data.make_dataset import (
-    get_movies_details,
-    clean_dataset
-)
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -51,13 +46,33 @@ def show_welcome_page():
 
 @app.get("/predict", tags=["Predict"])
 def predict(
-    ID:int
+    title: str,
+    overview: str,
+    main_genre_name: str,
+    original_language: str,
+    origin_country: str,
+    timestamp: int,
+    runtime: float,
+    budget: float,
+    popularity: float,
+    vote_average: float,
+    vote_count: float,
 ):
-    logger.info(f"Requête de prédiction reçue pour le film d'ID {ID}")
+    logger.info(f"Requête de prédiction reçue pour le movie nommé '{title}'")
+    X = pd.DataFrame([{
+        "title": title,
+        "overview": overview,
+        "main_genre_name": main_genre_name,
+        "original_language": original_language,
+        "origin_country": origin_country,
+        "timestamp": timestamp,
+        "runtime": runtime,
+        "budget": budget,
+        "popularity": popularity,
+        "vote_average": vote_average,
+        "vote_count": vote_count,
+    }])
 
-    df = get_movies_details([ID])
-    df = clean_dataset(df)
-
-    prediction = model.predict(df)
-    logger.info(f"Prédiction réussie pour le film d'ID {ID}")
+    prediction = model.predict(X)[0]
+    logger.info(f"Prédiction réussie pour le film nommé '{title}'")
     return {"prediction": float(prediction)}
