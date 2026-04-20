@@ -188,4 +188,4 @@ Ce projet est distribué sous licence MIT. Voir le fichier [LICENSE](LICENSE).
 
 ## Auteurs
 
-Projet réalisé dans le cadre du cours "MISE EN PRODUCTION" en A à l'ENSAE.
+Projet réalisé dans le cadre du cours "Mise en production" à l'ENSAE.
