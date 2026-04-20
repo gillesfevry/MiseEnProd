@@ -96,7 +96,14 @@ cd MiseEnProd
 Avec `uv` (recommandé) :
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+chmod +x install.sh
+```
+
+puis 
+
+```bash
+./install.sh
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 Avec `pip` :
