@@ -24,22 +24,36 @@ Pour le déploiement de l'application, se rendre sur [https://movie.lab.sspcloud
 
 **Tester l'API de prédiction**
 
-Pour tester une prédiction manuellement : cliquer sur **predict** → **GET / predict** → (entrer les paramètres souhaités, cf. l'exemple ci-dessous) → **try out**. Voici un exemple de paramètres à utiliser pour tester :
+Pour tester une prédiction manuellement : cliquer sur **predict** → **GET / predict** → (entrer les paramètres souhaités, cf. l'exemple ci-dessous) → **try out**.
 
-```json
-{
-  "title": "Harry Potter",
-  "overview": "A young wizard begins his magical journey.",
-  "main_genre_name": "Fantasy",
-  "original_language": "en",
-  "origin_country": "US",
-  "timestamp": 1609459200,
-  "runtime": 120,
-  "budget": 150000000,
-  "popularity": 80,
-  "vote_average": 7.8,
-  "vote_count": 5000
-}
+Notre API fonctionne avec les identifiants de TMDB.
+Pour prédire le revenu d’un film, cherchez le sur TMDB et ouvrez sa page. L’identifiant unique du film se trouve dans le lien. 
+
+Par exemple si vous cherchez le film “Michael” qui sort le 22/04/2026. Allez sur sa page TMDB (https://www.themoviedb.org/movie/936075-michael?language=fr), l’identifiant est le nombre qui suit “/movie/“ donc ici il s’agit de 936075.
+
+> **Note** : Ces identifiants peuvent également être obtenus de manière automatique via la fonction discover de l’API de TMDB
+
+
+Nous avons également une seconde API (uniquement en local) sur le fichier api_large.py que vous pouvez exécuter en local en faisant : 
+```bash
+uv run uvicorn app.api_large:app
+```
+
+Voici un exemple de paramètres à utiliser pour tester pour tester cette deuxième API locale:
+
+```bash
+curl -G "http://127.0.0.1:8000/predict" \
+     --data-urlencode "title=Harry Potter" \
+     --data-urlencode "overview=A young wizard begins his magical journey." \
+     --data-urlencode "main_genre_name=Fantasy" \
+     --data-urlencode "original_language=en" \
+     --data-urlencode "origin_country=US" \
+     --data-urlencode "timestamp=1609459200" \
+     --data-urlencode "runtime=120" \
+     --data-urlencode "budget=150000000" \
+     --data-urlencode "popularity=80" \
+     --data-urlencode "vote_average=7.8" \
+     --data-urlencode "vote_count=5000" 
 ```
 
 ## Structure du projet
@@ -154,13 +168,13 @@ uv run python -m src.data.download_from_s3
 ### Lancer l'entraînement
 
 ```bash
-uv run python -m src.models.train
+uv run python -m train
 ```
 
 Ou sans uv :
 
 ```bash
-python -m src.models.train
+python -m train
 ```
 
 ### Visualiser les résultats avec MLflow
