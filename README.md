@@ -44,9 +44,6 @@ MiseEnProd/
 │   │   ├── __init__.py
 │   │   ├── make_dataset.py       # Nettoyage des données brutes
 │   │   └── download_from_s3.py   # Téléchargement des données depuis S3
-│   ├── features/                 # Construction des features
-│   │   ├── __init__.py
-│   │   └── build_features.py
 │   ├── models/                   # Entraînement et prédiction
 │   │   ├── __init__.py
 │   │   ├── config.py             # Chargement des secrets (API token)
@@ -54,9 +51,6 @@ MiseEnProd/
 │   │   ├── predict_genre.py      # Prédiction du genre
 │   │   ├── predict_rating.py     # Prédiction de la note
 │   │   └── train.py              # Entraînement (prédiction du revenu)
-│   └── visualization/            # Visualisations
-│       ├── __init__.py
-│       └── visualize.py
 ├── app/                          # API de prédiction
 │   ├── api.py                    # Point d'entrée de l'API
 │   └── run.sh                    # Script de lancement
