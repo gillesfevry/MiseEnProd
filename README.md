@@ -14,7 +14,7 @@ Le projet initial explorait les données cinématographiques de [TMDB](https://w
 - **Tracer les expérimentations** avec MLflow
 - **Déployer une API** de prédiction
 
-## Déploiement
+## Déploiement - API
 
 Pour le déploiement de l'application, se rendre sur [https://movie.lab.sspcloud.fr/](https://movie.lab.sspcloud.fr/). Puis, pour faire une request, faire [https://movie.lab.sspcloud.fr/docs](https://movie.lab.sspcloud.fr/docs).
 
@@ -22,6 +22,25 @@ Pour le déploiement de l'application, se rendre sur [https://movie.lab.sspcloud
 
 > **Note** : le déploiement de l'application [https://movie.lab.sspcloud.fr/](https://movie.lab.sspcloud.fr/) est contrôlé par un autre dépôt ([https://github.com/RebeccaBle/application-deployment](https://github.com/RebeccaBle/application-deployment)).
 
+**Tester l'API de prédiction**
+
+Pour tester une prédiction manuellement : cliquer sur **get prediction** → **try out** → **execute**. Voici un exemple de paramètres à utiliser pour tester :
+
+```json
+{
+  "title": "Harry Potter",
+  "overview": "A young wizard begins his magical journey.",
+  "main_genre_name": "Fantasy",
+  "original_language": "en",
+  "origin_country": "US",
+  "timestamp": 1609459200,
+  "runtime": 120,
+  "budget": 150000000,
+  "popularity": 80,
+  "vote_average": 7.8,
+  "vote_count": 5000
+}
+```
 
 ## Structure du projet
 
