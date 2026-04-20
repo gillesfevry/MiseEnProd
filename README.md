@@ -16,7 +16,7 @@ Le projet initial explorait les données cinématographiques de [TMDB](https://w
 
 ## Déploiement - API
 
-Pour le déploiement de l'application, se rendre sur [https://movie.lab.sspcloud.fr/](https://movie.lab.sspcloud.fr/). Puis, pour faire une request, faire [https://movie.lab.sspcloud.fr/docs](https://movie.lab.sspcloud.fr/docs).
+Pour utiliser l'application, se rendre sur [https://movie.lab.sspcloud.fr/](https://movie.lab.sspcloud.fr/). Puis, pour faire une request, faire [https://movie.lab.sspcloud.fr/docs](https://movie.lab.sspcloud.fr/docs).
 
 > **Note** : il se peut qu'il s'affiche `no available server`, dans ce cas actualiser la page pour refaire fonctionner le site.
 
