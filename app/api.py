@@ -49,11 +49,11 @@ def show_welcome_page():
 
 @app.get("/predict", tags=["Predict"])
 def predict(ID: int):
-    logger.info(f"Requête de prédiction reçue pour le film d'ID {ID}")
+    logger.info(f"Requête de prédiction reçue pour le film dont l'ID est : {ID}")
 
     df = get_movies_details([ID])
     df = clean_dataset(df)
 
     prediction = model.predict(df)
-    logger.info(f"Prédiction réussie pour le film d'ID {ID}")
+    logger.info(f"Prédiction réussie pour le film dont l'ID est : {ID}")
     return {"prediction": float(prediction)}
