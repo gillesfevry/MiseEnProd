@@ -92,7 +92,6 @@ Avec `uv` (recommandé) :
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-uv sync
 ```
 
 Avec `pip` :
@@ -121,6 +120,8 @@ tmdb:
 
 Pour obtenir un token, créer un compte sur [themoviedb.org](https://www.themoviedb.org/) puis générer un Bearer Token dans Settings > API.
 
+**Si vous forkez le dépôt** et souhaitez utiliser la CI/CD (GitHub Actions), vous devez également ajouter le token comme secret GitHub : allez dans votre dépôt GitHub → Settings → Secrets and variables → Actions → New repository secret, puis créez un secret nommé `JETON_API` avec la valeur de votre Bearer Token TMDB.
+
 **4. Récupérer les données**
 
 Les données sont récupérées automatiquement via l'API TMDB au premier lancement si elles ne sont pas présentes localement. Elles peuvent aussi être téléchargées depuis S3 :
@@ -129,7 +130,7 @@ Les données sont récupérées automatiquement via l'API TMDB au premier lancem
 uv run python -m src.data.download_from_s3
 ```
 
-## Utilisation
+## Prise en main du modèle
 
 ### Lancer l'entraînement
 
