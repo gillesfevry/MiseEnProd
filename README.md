@@ -24,7 +24,7 @@ Pour le déploiement de l'application, se rendre sur [https://movie.lab.sspcloud
 
 **Tester l'API de prédiction**
 
-Pour tester une prédiction manuellement : cliquer sur **get prediction** → **try out** → **execute**. Voici un exemple de paramètres à utiliser pour tester :
+Pour tester une prédiction manuellement : cliquer sur **predict** → **GET / predict** → (entrer les paramètres souhaités, cf. l'exemple ci-dessous) → **try out**. Voici un exemple de paramètres à utiliser pour tester :
 
 ```json
 {
