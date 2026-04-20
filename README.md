@@ -6,6 +6,8 @@ Ce projet a été réalisé dans le cadre du cours **"Mise en production"** en 3
 
 Le projet initial explorait les données cinématographiques de [TMDB](https://www.themoviedb.org/) pour prédire la note moyenne et le genre des films. Cette version restructure et industrialise le projet en appliquant les bonnes pratiques de mise en production.
 
+Les Notebooks et les scripts utilisés dans le projet original peuvent être trouvés dans le dossier Notebooks de ce repo (en particulier Notebook_main.ipynb et tmdbdata.py). Enfin, toutes les clefs API mentionnées et présentes dans ces codes ont été désactivées.
+
 ## Objectifs
 
 - **Récupérer et nettoyer** les données cinématographiques via l'API TMDB
@@ -130,7 +132,7 @@ tmdb:
   bearer_token: "VOTRE_TOKEN_TMDB"
 ```
 
-Pour obtenir un token, créer un compte sur [themoviedb.org](https://www.themoviedb.org/) puis générer un Bearer Token dans Settings > API.
+Pour obtenir un token, créer un compte sur [themoviedb.org](https://www.themoviedb.org/) puis générer un Bearer Token dans Settings > API. Ne pas utiliser l'"API Key" mais bien le "API Read Access Token".
 
 **Si vous forkez le dépôt** et souhaitez utiliser la CI/CD (GitHub Actions), vous devez également ajouter le token comme secret GitHub : allez dans votre dépôt GitHub → Settings → Secrets and variables → Actions → New repository secret, puis créez un secret nommé `JETON_API` avec la valeur de votre Bearer Token TMDB.
 
