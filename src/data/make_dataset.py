@@ -88,12 +88,7 @@ def get_movie_ids(
             minimal_vote_count=minimal_vote_count,
             ascending=ascending,
         )
-    
-    raise ValueError(
-        f"Stratégie inconnue : '{strategy}'. "
-        "Utilisez 'default', 'top_rated', 'french_recent' ou 'balanced'."
-    )
-
+        
 
 def get_movies_details(ids: list[int]) -> pd.DataFrame:
     """Récupère les informations détaillées de chaque film.
