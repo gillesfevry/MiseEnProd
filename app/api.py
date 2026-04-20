@@ -1,7 +1,6 @@
 """A simple API to expose our trained model."""
 
 from fastapi import FastAPI
-import pandas as pd
 from pathlib import Path
 import skops.io as sio
 import logging
