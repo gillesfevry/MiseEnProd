@@ -189,7 +189,3 @@ Ce projet est distribué sous licence MIT. Voir le fichier [LICENSE](LICENSE).
 ## Auteurs
 
 Projet réalisé dans le cadre du cours "MISE EN PRODUCTION" en A à l'ENSAE.
-
-## Automatisation
-
-Le deploiement de l'application (https://movie.lab.sspcloud.fr/) est contrôlé par un autre dépôt.
