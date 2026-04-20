@@ -34,28 +34,6 @@ Par exemple si vous cherchez le film “Michael” qui sort le 22/04/2026. Allez
 > **Note** : Ces identifiants peuvent également être obtenus de manière automatique via la fonction discover de l’API de TMDB
 
 
-Nous avons également une seconde API (uniquement en local) sur le fichier api_large.py que vous pouvez exécuter en local en faisant : 
-```bash
-uv run uvicorn app.api_large:app
-```
-
-Voici un exemple de paramètres à utiliser pour tester pour tester cette deuxième API locale:
-
-```bash
-curl -G "http://127.0.0.1:8000/predict" \
-     --data-urlencode "title=Harry Potter" \
-     --data-urlencode "overview=A young wizard begins his magical journey." \
-     --data-urlencode "main_genre_name=Fantasy" \
-     --data-urlencode "original_language=en" \
-     --data-urlencode "origin_country=US" \
-     --data-urlencode "timestamp=1609459200" \
-     --data-urlencode "runtime=120" \
-     --data-urlencode "budget=150000000" \
-     --data-urlencode "popularity=80" \
-     --data-urlencode "vote_average=7.8" \
-     --data-urlencode "vote_count=5000" 
-```
-
 ## Structure du projet
 
 ```
@@ -186,6 +164,31 @@ uv run mlflow ui
 Ouvrir le navigateur à l'adresse `http://localhost:5000`.
 
 > **Note (SSP Cloud)** : vérifier que le port 5000 est bien activé dans la configuration du service VSCode (onglet Networking).
+
+### Seconde API locale
+
+Nous avons également une seconde API (uniquement en local) sur le fichier api_large.py que vous pouvez exécuter en local en faisant : 
+```bash
+uv run uvicorn app.api_large:app
+```
+
+Voici un exemple de paramètres à utiliser pour tester pour tester cette deuxième API locale:
+
+```bash
+curl -G "http://127.0.0.1:8000/predict" \
+     --data-urlencode "title=Harry Potter" \
+     --data-urlencode "overview=A young wizard begins his magical journey." \
+     --data-urlencode "main_genre_name=Fantasy" \
+     --data-urlencode "original_language=en" \
+     --data-urlencode "origin_country=US" \
+     --data-urlencode "timestamp=1609459200" \
+     --data-urlencode "runtime=120" \
+     --data-urlencode "budget=150000000" \
+     --data-urlencode "popularity=80" \
+     --data-urlencode "vote_average=7.8" \
+     --data-urlencode "vote_count=5000" 
+```
+
 
 ## Qualité du code
 
