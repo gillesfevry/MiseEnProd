@@ -88,7 +88,7 @@ MiseEnProd/
 └── README.md
 ```
 
-## Installation
+## Installation depuis le terminal
 
 ### Prérequis
 
