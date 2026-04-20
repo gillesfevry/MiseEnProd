@@ -7,8 +7,7 @@ import skops.io as sio
 import logging
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("api-movie")
 
@@ -20,9 +19,12 @@ app = FastAPI(
 
 MODEL_PATH = Path("models/best_model.skops")
 
+
 def load_model():
-    try :
-        logger.info(f"Tentative de chargement du modèle depuis l'emplacement {MODEL_PATH}")
+    try:
+        logger.info(
+            f"Tentative de chargement du modèle depuis l'emplacement {MODEL_PATH}"
+        )
         trusted_types = sio.get_untrusted_types(file=MODEL_PATH)
         m = sio.load(MODEL_PATH, trusted=trusted_types)
         logger.info("Modèle chargé.")
@@ -59,19 +61,23 @@ def predict(
     vote_count: float,
 ):
     logger.info(f"Requête de prédiction reçue pour le movie nommé '{title}'")
-    X = pd.DataFrame([{
-        "title": title,
-        "overview": overview,
-        "main_genre_name": main_genre_name,
-        "original_language": original_language,
-        "origin_country": origin_country,
-        "timestamp": timestamp,
-        "runtime": runtime,
-        "budget": budget,
-        "popularity": popularity,
-        "vote_average": vote_average,
-        "vote_count": vote_count,
-    }])
+    X = pd.DataFrame(
+        [
+            {
+                "title": title,
+                "overview": overview,
+                "main_genre_name": main_genre_name,
+                "original_language": original_language,
+                "origin_country": origin_country,
+                "timestamp": timestamp,
+                "runtime": runtime,
+                "budget": budget,
+                "popularity": popularity,
+                "vote_average": vote_average,
+                "vote_count": vote_count,
+            }
+        ]
+    )
 
     prediction = model.predict(X)[0]
     logger.info(f"Prédiction réussie pour le film nommé '{title}'")
