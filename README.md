@@ -14,6 +14,14 @@ Le projet initial explorait les données cinématographiques de [TMDB](https://w
 - **Tracer les expérimentations** avec MLflow
 - **Déployer une API** de prédiction
 
+## Déploiement
+
+Pour le déploiement de l'application, se rendre sur [https://movie.lab.sspcloud.fr/](https://movie.lab.sspcloud.fr/). Puis, pour faire une request, faire [https://movie.lab.sspcloud.fr/docs](https://movie.lab.sspcloud.fr/docs).
+
+> **Note** : il se peut qu'il s'affiche `no available server', dans ce cas actualiser la page pour refaire fonctionner le site.
+> **Note** : le déploiement de l'application [https://movie.lab.sspcloud.fr/](https://movie.lab.sspcloud.fr/) est contrôlé par un autre dépôt ([https://github.com/RebeccaBle/application-deployment](https://github.com/RebeccaBle/application-deployment)).
+
+
 ## Structure du projet
 
 ```
@@ -145,6 +153,13 @@ Ouvrir le navigateur à l'adresse `http://localhost:5000`.
 > **Note (SSP Cloud)** : vérifier que le port 5000 est bien activé dans la configuration du service VSCode (onglet Networking).
 
 ## Qualité du code
+
+Le projet utilise [Ruff](https://docs.astral.sh/ruff/) comme linter et formatter :
+
+```bash
+ruff check src/ --fix
+ruff format src/
+```
 
 ## Licence
 
