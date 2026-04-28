@@ -20,6 +20,7 @@ Usage::
 
 from __future__ import annotations
 
+import os
 import argparse
 import logging
 from pathlib import Path
@@ -225,6 +226,8 @@ def run(
     logger.info("Dataset ready: %d rows, %d columns", *df.shape)
 
     # -- MLflow experiment -----------------------------------------------------
+    mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI"))
+    mlflow.set_experiment(experiment_name)
     mlflow.set_experiment(experiment_name)
 
     with mlflow.start_run(run_name="grid_search_all_models"):

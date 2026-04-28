@@ -4,38 +4,36 @@ from fastapi import FastAPI
 from pathlib import Path
 import skops.io as sio
 import logging
+import mlflow
 
 from src.data.make_dataset import get_movies_details, clean_dataset
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format="{asctime} - {levelname} - {message}",
+    style="{",
+    datefmt="%Y-%m-%d %H:%M",
+    level=logging.DEBUG,
+    handlers=[logging.FileHandler("api.log"), logging.StreamHandler()],
 )
-logger = logging.getLogger("api-movie")
+
+# Preload model -------------------
+
+logging.info(
+    "Getting model from MLFlow"
+)
+
+model_name = "production"
+model_version = "latest"
+
+model_uri = f"models:/{model_name}/{model_version}"
+model = mlflow.sklearn.load_model(model_uri)
+
+# Preload model -------------------
 
 app = FastAPI(
     title="Prédiction du revenu d'un film",
     description="Application de prédiction du revenu d'un film",
 )
-
-
-MODEL_PATH = Path("models/best_model.skops")
-
-
-def load_model():
-    try:
-        logger.info(
-            f"Tentative de chargement du modèle depuis l'emplacement {MODEL_PATH}"
-        )
-        trusted_types = sio.get_untrusted_types(file=MODEL_PATH)
-        m = sio.load(MODEL_PATH, trusted=trusted_types)
-        logger.info("Modèle chargé.")
-        return m
-    except Exception as e:
-        logger.error(f"Erreur lors du chargement du modèle : {e}")
-        raise e
-
-
-model = load_model()
 
 
 @app.get("/", tags=["Welcome"])
