@@ -2,8 +2,6 @@
 
 from fastapi import FastAPI
 import pandas as pd
-from pathlib import Path
-import skops.io as sio
 import logging
 import mlflow
 
@@ -59,7 +57,7 @@ def predict(
     vote_average: float,
     vote_count: float,
 ):
-    logger.info(f"Requête de prédiction reçue pour le movie nommé '{title}'")
+    logging.info(f"Requête de prédiction reçue pour le movie nommé '{title}'")
     X = pd.DataFrame(
         [
             {
@@ -79,5 +77,5 @@ def predict(
     )
 
     prediction = model.predict(X)[0]
-    logger.info(f"Prédiction réussie pour le film nommé '{title}'")
+    logging.info(f"Prédiction réussie pour le film nommé '{title}'")
     return {"prediction": float(prediction)}
