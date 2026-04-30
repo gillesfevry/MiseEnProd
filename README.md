@@ -50,9 +50,8 @@ MiseEnProd/
 │   │   ├── __init__.py
 │   │   ├── config.py             # Chargement des secrets (API token)
 │   │   ├── model_pipelines.py    # Définition des pipelines scikit-learn
-│   │   ├── predict_genre.py      # Prédiction du genre
-│   │   ├── predict_rating.py     # Prédiction de la note
-│   │   └── train.py              # Entraînement (prédiction du revenu)
+│   │   ├── predict_genre.py      # Prédiction du genre      
+│   │   └── predict_rating.py     # Prédiction de la note        
 ├── app/                          # API de prédiction
 │   ├── api.py                    # Point d'entrée de l'API
 │   └── run.sh                    # Script de lancement
@@ -71,6 +70,7 @@ MiseEnProd/
 ├── pyproject.toml                # Configuration du projet et de Ruff
 ├── uv.lock                       # Lockfile uv
 ├── install.sh                    # Script d'installation
+├── train.py                      # Entraînement (prédiction du revenu)
 ├── Dockerfile                    # Conteneurisation de l'application
 ├── LICENSE                       # Licence MIT
 └── README.md
